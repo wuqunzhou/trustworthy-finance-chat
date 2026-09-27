@@ -48,7 +48,7 @@ def chat():
     session_id = (request.form.get("session_id") or "").strip() or uuid.uuid4().hex
     request_full_report = (request.form.get("request_full_report") or "false").lower() == "true"
 
-    attachment = {"url": "", "file_type": ""}
+    attachment = None
     file = request.files.get("file")
     if file and file.filename:
         original = file.filename
@@ -65,7 +65,7 @@ def chat():
 
         attachment = {
             "url": _public_upload_url(safe_name),
-            "file_type": "pdf",
+            "file_type": "document",
         }
 
     payload = {

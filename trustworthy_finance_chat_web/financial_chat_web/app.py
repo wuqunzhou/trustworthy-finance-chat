@@ -46,19 +46,24 @@ def chat():
 
     user_message = (request.form.get("message") or "").strip()
     session_id = (request.form.get("session_id") or "").strip() or uuid.uuid4().hex
-    request_full_report = (request.form.get("request_full_report") or "false").lower() == "true"
+    request_full_report = (
+        request.form.get("request_full_report") or "false"
+    ).lower() == "true"
 
     attachment = None
     file = request.files.get("file")
+
     if file and file.filename:
         original = file.filename
         ext = Path(original).suffix.lower()
+
         if ext != ".pdf":
             return jsonify({"error": "目前仅支持 PDF 年报。"}), 400
 
         safe_name = f"{uuid.uuid4().hex}.pdf"
         save_path = UPLOAD_DIR / safe_name
         file.save(save_path)
+
         if save_path.stat().st_size > MAX_PDF_BYTES:
             save_path.unlink(missing_ok=True)
             return jsonify({"error": "PDF 超过 30 MB，请压缩后再上传。"}), 400
@@ -69,13 +74,13 @@ def chat():
         }
 
     payload = {
-    "user_message": user_message,
-    "session_id": session_id,
-    "request_full_report": request_full_report,
-}
+        "user_message": user_message,
+        "session_id": session_id,
+        "request_full_report": request_full_report,
+    }
 
-if attachment is not None:
-    payload["attachment"] = attachment
+    if attachment is not None:
+        payload["attachment"] = attachment
 
     try:
         resp = requests.post(
@@ -93,12 +98,17 @@ if attachment is not None:
     try:
         data = resp.json()
     except ValueError:
-        return jsonify({"error": f"分析服务返回非 JSON（HTTP {resp.status_code}）。", "raw": resp.text[:2000]}), 502
+        return jsonify({
+            "error": f"分析服务返回非 JSON（HTTP {resp.status_code}）。",
+            "raw": resp.text[:2000],
+        }), 502
 
     if not resp.ok:
-        return jsonify({"error": "分析服务返回错误。", "detail": data}), resp.status_code
+        return jsonify({
+            "error": "分析服务返回错误。",
+            "detail": data,
+        }), resp.status_code
 
-    # Coze /run may return the graph output directly or wrap it.
     if isinstance(data, dict):
         if isinstance(data.get("data"), dict):
             out = data["data"]
@@ -109,7 +119,12 @@ if attachment is not None:
     else:
         out = {"reply": str(data)}
 
-    reply = out.get("reply") or out.get("message") or "分析已完成，但未返回文本回复。"
+    reply = (
+        out.get("reply")
+        or out.get("message")
+        or "分析已完成，但未返回文本回复。"
+    )
+
     return jsonify({
         "session_id": session_id,
         "reply": reply,
@@ -118,7 +133,6 @@ if attachment is not None:
         "markdown_report": out.get("markdown_report", ""),
         "raw": out,
     })
-
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8000"))

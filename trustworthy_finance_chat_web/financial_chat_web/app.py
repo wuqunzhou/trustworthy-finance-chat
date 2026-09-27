@@ -1,3 +1,195 @@
+import json
+import os
+import uuid
+from pathlib import Path
+
+import requests
+from flask import Flask, jsonify, render_template, request, send_from_directory
+
+APP_DIR = Path(__file__).resolve().parent
+UPLOAD_DIR = APP_DIR / "uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+MAX_PDF_BYTES = 30 * 1024 * 1024
+
+COZE_API_URL = os.getenv(
+    "COZE_API_URL",
+    "https://bysb7qrsyw.coze.site/run",
+).rstrip("/")
+
+if COZE_API_URL.endswith("/run"):
+    COZE_BASE_URL = COZE_API_URL[:-4]
+else:
+    COZE_BASE_URL = COZE_API_URL
+
+COZE_ASYNC_URL = f"{COZE_BASE_URL}/async_run"
+COZE_TASK_URL = f"{COZE_BASE_URL}/task"
+COZE_API_TOKEN = os.getenv("COZE_API_TOKEN", "")
+
+app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = MAX_PDF_BYTES + 1024 * 1024
+
+
+@app.get("/")
+def index():
+    return render_template("index.html")
+
+
+@app.get("/health")
+def health():
+    return {"ok": True}
+
+
+@app.get("/uploads/<path:filename>")
+def uploaded_file(filename: str):
+    return send_from_directory(UPLOAD_DIR, filename, as_attachment=False)
+
+
+def _public_upload_url(filename: str) -> str:
+    base = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
+    if not base:
+        base = request.url_root.rstrip("/")
+    return f"{base}/uploads/{filename}"
+
+
+def _headers() -> dict:
+    return {
+        "Authorization": f"Bearer {COZE_API_TOKEN}",
+        "Content-Type": "application/json",
+    }
+
+
+def _json_or_error(resp):
+    try:
+        return resp.json(), None
+    except ValueError:
+        return None, {
+            "error": f"分析服务返回非 JSON（HTTP {resp.status_code}）。",
+            "raw": resp.text[:2000],
+        }
+
+
+def _unwrap_output(value):
+    """兼容直接 dict、JSON 字符串以及 data/output 包装。"""
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except Exception:
+            return {"reply": value}
+
+    if not isinstance(value, dict):
+        return {"reply": str(value)}
+
+    if isinstance(value.get("data"), dict):
+        value = value["data"]
+    elif isinstance(value.get("output"), dict):
+        value = value["output"]
+
+    # 某些异步任务 result 可能再次是 JSON 字符串
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except Exception:
+            return {"reply": value}
+
+    return value if isinstance(value, dict) else {"reply": str(value)}
+
+
+def _normalize_reply(out: dict, session_id: str) -> dict:
+    reply = (
+        out.get("reply")
+        or out.get("message")
+        or out.get("answer")
+        or "分析已完成，但未返回文本回复。"
+    )
+    return {
+        "session_id": session_id,
+        "reply": reply,
+        "document_identity": out.get("document_identity", ""),
+        "agent1_cached": out.get("agent1_cached", False),
+        "markdown_report": out.get("markdown_report", ""),
+        "raw": out,
+    }
+
+
+@app.post("/api/chat")
+def chat():
+    if not COZE_API_TOKEN:
+        return jsonify({"error": "服务器尚未配置 COZE_API_TOKEN。"}), 500
+
+    user_message = (request.form.get("message") or "").strip()
+    session_id = (
+        (request.form.get("session_id") or "").strip()
+        or uuid.uuid4().hex
+    )
+    request_full_report = (
+        (request.form.get("request_full_report") or "false").lower() == "true"
+    )
+
+    attachment = None
+    file = request.files.get("file")
+
+    if file and file.filename:
+        original = file.filename
+        ext = Path(original).suffix.lower()
+
+        if ext != ".pdf":
+            return jsonify({"error": "目前仅支持 PDF 年报。"}), 400
+
+        safe_name = f"{uuid.uuid4().hex}.pdf"
+        save_path = UPLOAD_DIR / safe_name
+        file.save(save_path)
+
+        if save_path.stat().st_size > MAX_PDF_BYTES:
+            save_path.unlink(missing_ok=True)
+            return jsonify({"error": "PDF 超过 30 MB，请压缩后再上传。"}), 400
+
+        attachment = {
+            "url": _public_upload_url(safe_name),
+            "file_type": "document",
+        }
+
+    payload = {
+        "user_message": user_message,
+        "session_id": session_id,
+        "request_full_report": request_full_report,
+    }
+
+    if attachment is not None:
+        payload["attachment"] = attachment
+
+    # 新 PDF 解析可能耗时很长：使用 Coze 部署工作流的异步接口，
+    # 立即返回 task_id，让浏览器轮询任务状态，避免 Render/Gunicorn 超时。
+    if attachment is not None:
+        try:
+            resp = requests.post(
+                COZE_ASYNC_URL,
+                headers=_headers(),
+                json=payload,
+                timeout=30,
+            )
+        except requests.RequestException as exc:
+            return jsonify({"error": f"启动年报分析失败：{exc}"}), 502
+
+        data, parse_error = _json_or_error(resp)
+        if parse_error:
+            return jsonify(parse_error), 502
+
+        if not resp.ok:
+            return jsonify({
+                "error": "启动年报分析任务失败。",
+                "detail": data,
+            }), resp.status_code
+
+        task_id = data.get("task_id") if isinstance(data, dict) else None
+        if not task_id and isinstance(data, dict) and isinstance(data.get("data"), dict):
+            task_id = data["data"].get("task_id")
+
+        if not task_id:
+            return jsonify({
+                "error": "Coze 已接受请求，但没有返回 task_id。",
+                "detail": data,
+            }), 502
 
         return jsonify({
             "session_id": session_id,

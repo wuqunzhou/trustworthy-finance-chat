@@ -5,40 +5,54 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>可信金融投研助手</title>
   <style>
-    *{box-sizing:border-box} body{margin:0;font-family:Inter,"Microsoft YaHei",system-ui,sans-serif;background:#f6f7f9;color:#151515}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,"Microsoft YaHei",system-ui,sans-serif;background:#f6f7f9;color:#151515}
     .app{height:100vh;display:flex;flex-direction:column;max-width:980px;margin:0 auto;background:#fff;border-left:1px solid #eee;border-right:1px solid #eee}
-    header{padding:18px 22px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+    header{padding:18px 22px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;gap:12px}
     .title{font-size:18px;font-weight:700}.sub{font-size:12px;color:#777;margin-top:3px}
-    .badge{font-size:12px;padding:6px 10px;border-radius:999px;background:#f0f2f5;color:#555}
+    .badge{font-size:12px;padding:6px 10px;border-radius:999px;background:#f0f2f5;color:#555;white-space:nowrap}
     #messages{flex:1;overflow:auto;padding:24px 22px}
-    .row{display:flex;margin:12px 0}.row.user{justify-content:flex-end}.bubble{max-width:78%;padding:12px 14px;border-radius:16px;white-space:pre-wrap;line-height:1.6;font-size:14px}
+    .row{display:flex;margin:12px 0}.row.user{justify-content:flex-end}
+    .bubble{max-width:78%;padding:12px 14px;border-radius:16px;white-space:pre-wrap;line-height:1.6;font-size:14px}
     .ai .bubble{background:#f1f3f5;border-top-left-radius:5px}.user .bubble{background:#171717;color:#fff;border-top-right-radius:5px}
-    .meta{font-size:11px;color:#999;margin-top:5px}
-    .composer{padding:14px 16px;border-top:1px solid #eee;background:#fff}.attachline{display:flex;align-items:center;gap:10px;margin-bottom:9px;min-height:30px}.filechip{display:none;padding:6px 10px;border-radius:10px;background:#f2f3f5;font-size:12px}
+    .composer{padding:14px 16px;border-top:1px solid #eee;background:#fff}
+    .attachline{display:flex;align-items:center;gap:10px;margin-bottom:9px;min-height:30px}
+    .filechip{display:none;padding:6px 10px;border-radius:10px;background:#f2f3f5;font-size:12px;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .inputrow{display:flex;gap:8px;align-items:flex-end}.inputwrap{flex:1;border:1px solid #dcdfe3;border-radius:16px;padding:10px 12px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
-    textarea{width:100%;border:none;outline:none;resize:none;min-height:48px;max-height:130px;font:inherit;background:transparent}.actions{display:flex;gap:8px;align-items:center;margin-top:8px}
-    button,.filebtn{border:none;border-radius:12px;padding:9px 14px;font-weight:600;cursor:pointer}.send{background:#151515;color:#fff}.secondary,.filebtn{background:#f0f2f4;color:#333}.send:disabled{opacity:.5;cursor:not-allowed}
-    input[type=file]{display:none}.status{font-size:12px;color:#777;margin-left:auto}.warn{color:#a55}
+    textarea{width:100%;border:none;outline:none;resize:none;min-height:48px;max-height:130px;font:inherit;background:transparent}
+    .actions{display:flex;gap:8px;align-items:center;margin-top:8px}
+    button,.filebtn{border:none;border-radius:12px;padding:9px 14px;font-weight:600;cursor:pointer}
+    .send{background:#151515;color:#fff}.secondary,.filebtn{background:#f0f2f4;color:#333}
+    .send:disabled,.secondary:disabled,.filebtn.disabled{opacity:.5;cursor:not-allowed}
+    input[type=file]{display:none}.status{font-size:12px;color:#777;margin-left:auto}.status.busy{color:#8a5b00}
     details{margin-top:8px}.report{margin-top:8px;padding:12px;background:#fafafa;border:1px solid #eee;border-radius:12px;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;max-height:360px;overflow:auto}
-    @media(max-width:650px){.bubble{max-width:90%}.app{border:0}}
+    .progress{display:none;margin:0 0 10px 0;padding:10px 12px;background:#fff8e8;border:1px solid #f0dfad;border-radius:12px;font-size:12px;color:#6e560d}
+    @media(max-width:650px){.bubble{max-width:90%}.app{border:0}.badge{display:none}}
   </style>
 </head>
 <body>
 <div class="app">
   <header>
-    <div><div class="title">可信金融投研助手</div><div class="sub">基于年报事实、可追溯计算与审计门禁</div></div>
+    <div>
+      <div class="title">可信金融投研助手</div>
+      <div class="sub">基于年报事实、可追溯计算与审计门禁</div>
+    </div>
     <div class="badge">Decision Support · Not Investment Advice</div>
   </header>
+
   <main id="messages">
     <div class="row ai"><div><div class="bubble">你好。你可以上传一家上市公司的年度报告 PDF，并告诉我“帮我分析这家公司”。如果估值还缺 WACC、增长率等参数，我会继续向你确认，不会自动编造。</div></div></div>
   </main>
+
   <section class="composer">
+    <div id="progress" class="progress"></div>
     <div class="attachline">
-      <label class="filebtn" for="file">📎 上传年报 PDF</label>
+      <label id="fileLabel" class="filebtn" for="file">📎 上传年报 PDF</label>
       <input id="file" type="file" accept="application/pdf,.pdf" />
       <span id="filechip" class="filechip"></span>
       <span id="status" class="status"></span>
     </div>
+
     <div class="inputrow">
       <div class="inputwrap">
         <textarea id="message" placeholder="输入问题，例如：帮我分析一下这家公司"></textarea>
@@ -51,62 +65,249 @@
     </div>
   </section>
 </div>
+
 <script>
 const messages = document.getElementById('messages');
 const message = document.getElementById('message');
 const fileInput = document.getElementById('file');
 const filechip = document.getElementById('filechip');
+const fileLabel = document.getElementById('fileLabel');
 const statusEl = document.getElementById('status');
+const progressEl = document.getElementById('progress');
 const sendBtn = document.getElementById('send');
 const fullBtn = document.getElementById('full');
+
 const sessionId = localStorage.getItem('finance_session_id') || crypto.randomUUID();
 localStorage.setItem('finance_session_id', sessionId);
 
+let busy = false;
+const ACTIVE_TASK_KEY = `finance_active_task_id_${sessionId}`;
+
 function addBubble(text, who='ai', report='') {
-  const row = document.createElement('div'); row.className = 'row ' + who;
+  const row = document.createElement('div');
+  row.className = 'row ' + who;
+
   const box = document.createElement('div');
-  const bubble = document.createElement('div'); bubble.className='bubble'; bubble.textContent=text;
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
   box.appendChild(bubble);
+
   if (report) {
-    const details=document.createElement('details');
-    const sum=document.createElement('summary'); sum.textContent='查看完整 Markdown 报告';
-    const pre=document.createElement('div'); pre.className='report'; pre.textContent=report;
-    details.appendChild(sum); details.appendChild(pre); box.appendChild(details);
+    const details = document.createElement('details');
+    const sum = document.createElement('summary');
+    sum.textContent = '查看完整 Markdown 报告';
+    const pre = document.createElement('div');
+    pre.className = 'report';
+    pre.textContent = report;
+    details.appendChild(sum);
+    details.appendChild(pre);
+    box.appendChild(details);
   }
-  row.appendChild(box); messages.appendChild(row); messages.scrollTop=messages.scrollHeight;
+
+  row.appendChild(box);
+  messages.appendChild(row);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function setBusy(on, text='') {
+  busy = on;
+  sendBtn.disabled = on;
+  fullBtn.disabled = on;
+  fileInput.disabled = on;
+  fileLabel.classList.toggle('disabled', on);
+  statusEl.className = on ? 'status busy' : 'status';
+  statusEl.textContent = text;
+}
+
+function showProgress(text='') {
+  if (!text) {
+    progressEl.style.display = 'none';
+    progressEl.textContent = '';
+    return;
+  }
+  progressEl.style.display = 'block';
+  progressEl.textContent = text;
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 fileInput.addEventListener('change', () => {
-  const f=fileInput.files[0];
-  if(f){filechip.style.display='inline-block'; filechip.textContent='📄 '+f.name;} else {filechip.style.display='none';}
+  const f = fileInput.files[0];
+  if (f) {
+    filechip.style.display = 'inline-block';
+    filechip.textContent = '📄 ' + f.name;
+  } else {
+    filechip.style.display = 'none';
+    filechip.textContent = '';
+  }
 });
 
-async function send(fullReport=false){
-  const text=(message.value||'').trim();
-  const f=fileInput.files[0];
-  if(!text && !f && !fullReport) return;
-  if(text) addBubble(text,'user');
-  if(f) addBubble('已选择文件：'+f.name,'user');
-  sendBtn.disabled=true; statusEl.textContent='分析中…';
-  const fd=new FormData();
+async function readJsonSafely(response) {
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`服务器返回非 JSON（HTTP ${response.status}）：${text.slice(0, 180)}`);
+  }
+}
+
+async function pollTask(taskId) {
+  const started = Date.now();
+  const maxWaitMs = 45 * 60 * 1000; // 45 分钟
+  let attempt = 0;
+
+  while (Date.now() - started < maxWaitMs) {
+    attempt += 1;
+    const elapsedMin = Math.floor((Date.now() - started) / 60000);
+    showProgress(`年报正在后台解析与分析中（已等待约 ${elapsedMin} 分钟）。请保持页面打开，不要重复上传。`);
+
+    const r = await fetch(`/api/task/${encodeURIComponent(taskId)}?session_id=${encodeURIComponent(sessionId)}`);
+    const data = await readJsonSafely(r);
+
+    if (!r.ok) {
+      throw new Error(data.error || '查询分析任务失败');
+    }
+
+    const status = String(data.status || '').toLowerCase();
+
+    if (status === 'completed') {
+      showProgress('');
+      return data;
+    }
+
+    if (status === 'failed' || status === 'timeout') {
+      const detail = typeof data.error === 'string' ? data.error : JSON.stringify(data.error || data);
+      throw new Error(`年报分析任务${status === 'timeout' ? '超时' : '失败'}：${detail}`);
+    }
+
+    // 前几分钟 5 秒一次，之后 10 秒一次，减少无意义请求
+    await sleep(attempt <= 36 ? 5000 : 10000);
+  }
+
+  throw new Error('等待分析结果超过 45 分钟。任务可能仍在后台运行，请稍后再试。');
+}
+
+async function send(fullReport=false) {
+  if (busy) return;
+
+  const text = (message.value || '').trim();
+  const f = fileInput.files[0];
+
+  if (!text && !f && !fullReport) return;
+
+  if (text) addBubble(text, 'user');
+  if (f) addBubble('已选择文件：' + f.name, 'user');
+
+  setBusy(true, f ? '正在提交年报分析任务…' : '分析中…');
+
+  const fd = new FormData();
   fd.append('message', fullReport && !text ? '完整报告' : text);
   fd.append('session_id', sessionId);
   fd.append('request_full_report', fullReport ? 'true' : 'false');
-  if(f) fd.append('file', f);
-  try{
-    const r=await fetch('/api/chat',{method:'POST',body:fd});
-    const data=await r.json();
-    if(!r.ok) throw new Error(data.error || '请求失败');
-    addBubble(data.reply || '已完成。','ai',data.markdown_report || '');
-    message.value=''; fileInput.value=''; filechip.style.display='none';
-    if(data.agent1_cached) statusEl.textContent='已复用年报缓存'; else statusEl.textContent='';
-  }catch(e){ addBubble('请求失败：'+e.message,'ai'); statusEl.textContent=''; }
-  finally{sendBtn.disabled=false;}
+  if (f) fd.append('file', f);
+
+  try {
+    const r = await fetch('/api/chat', {method:'POST', body:fd});
+    const data = await readJsonSafely(r);
+
+    if (!r.ok) {
+      const extra = data.detail ? `\n${JSON.stringify(data.detail)}` : '';
+      throw new Error((data.error || '请求失败') + extra);
+    }
+
+    // 上传 PDF：后端返回异步 task_id，浏览器开始轮询。
+    if (data.async && data.task_id) {
+      addBubble(data.reply || '年报已上传，正在后台解析。', 'ai');
+      fileInput.value = '';
+      filechip.style.display = 'none';
+      filechip.textContent = '';
+      message.value = '';
+
+      setBusy(true, '年报解析中…');
+      localStorage.setItem(ACTIVE_TASK_KEY, data.task_id);
+      const finalData = await pollTask(data.task_id);
+      localStorage.removeItem(ACTIVE_TASK_KEY);
+
+      addBubble(
+        finalData.reply || '年报分析完成。',
+        'ai',
+        finalData.markdown_report || ''
+      );
+
+      statusEl.textContent = finalData.agent1_cached ? '年报解析完成并已缓存' : '年报分析完成';
+      return;
+    }
+
+    // 普通聊天/补参数：同步返回。
+    addBubble(data.reply || '已完成。', 'ai', data.markdown_report || '');
+    message.value = '';
+    fileInput.value = '';
+    filechip.style.display = 'none';
+    filechip.textContent = '';
+    statusEl.textContent = data.agent1_cached ? '已复用年报缓存' : '';
+
+  } catch (e) {
+    showProgress('');
+    addBubble('请求失败：' + e.message, 'ai');
+    statusEl.textContent = '';
+  } finally {
+    setBusy(false, statusEl.textContent);
+  }
 }
 
-sendBtn.addEventListener('click',()=>send(false));
-fullBtn.addEventListener('click',()=>send(true));
-message.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(false);}});
+
+
+async function resumeExistingTask() {
+  const params = new URLSearchParams(window.location.search);
+  const taskFromUrl = (params.get('task_id') || '').trim();
+  const taskId = taskFromUrl || localStorage.getItem(ACTIVE_TASK_KEY);
+
+  if (!taskId) return;
+
+  // URL 里的 task_id 只用于恢复展示，不会创建新任务、不会重新上传 PDF。
+  localStorage.setItem(ACTIVE_TASK_KEY, taskId);
+  setBusy(true, '正在恢复年报分析结果…');
+  showProgress('正在读取已存在的后台任务，不会重新解析 PDF。');
+
+  try {
+    const finalData = await pollTask(taskId);
+    localStorage.removeItem(ACTIVE_TASK_KEY);
+    showProgress('');
+    addBubble(
+      finalData.reply || '年报分析完成。',
+      'ai',
+      finalData.markdown_report || ''
+    );
+    statusEl.textContent = finalData.agent1_cached ? '年报解析完成并已缓存' : '年报分析完成';
+
+    if (taskFromUrl) {
+      params.delete('task_id');
+      const newQuery = params.toString();
+      history.replaceState(null, '', window.location.pathname + (newQuery ? `?${newQuery}` : ''));
+    }
+  } catch (e) {
+    showProgress('');
+    addBubble('恢复任务失败：' + e.message, 'ai');
+    statusEl.textContent = '';
+  } finally {
+    setBusy(false, statusEl.textContent);
+  }
+}
+
+sendBtn.addEventListener('click', () => send(false));
+fullBtn.addEventListener('click', () => send(true));
+
+resumeExistingTask();
+
+message.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    send(false);
+  }
+});
 </script>
 </body>
 </html>

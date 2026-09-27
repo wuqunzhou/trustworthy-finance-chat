@@ -1,121 +1,113 @@
-import os
-import uuid
-from pathlib import Path
 
-import requests
-from flask import Flask, jsonify, render_template, request, send_from_directory
+        return jsonify({
+            "session_id": session_id,
+            "async": True,
+            "task_id": task_id,
+            "status": (
+                data.get("status", "pending")
+                if isinstance(data, dict)
+                else "pending"
+            ),
+            "reply": "年报已上传，正在解析和分析。这个过程可能需要较长时间，请保持页面打开。",
+        })
 
-APP_DIR = Path(__file__).resolve().parent
-UPLOAD_DIR = APP_DIR / "uploads"
-UPLOAD_DIR.mkdir(exist_ok=True)
-
-MAX_PDF_BYTES = 30 * 1024 * 1024
-COZE_API_URL = os.getenv("COZE_API_URL", "https://bysb7qrsyw.coze.site/run")
-COZE_API_TOKEN = os.getenv("COZE_API_TOKEN", "")
-
-app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = MAX_PDF_BYTES + 1024 * 1024
-
-
-@app.get("/")
-def index():
-    return render_template("index.html")
-
-
-@app.get("/health")
-def health():
-    return {"ok": True}
-
-
-@app.get("/uploads/<path:filename>")
-def uploaded_file(filename: str):
-    return send_from_directory(UPLOAD_DIR, filename, as_attachment=False)
-
-
-def _public_upload_url(filename: str) -> str:
-    base = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
-    if not base:
-        base = request.url_root.rstrip("/")
-    return f"{base}/uploads/{filename}"
-
-
-@app.post("/api/chat")
-def chat():
-    if not COZE_API_TOKEN:
-        return jsonify({"error": "服务器尚未配置 COZE_API_TOKEN。"}), 500
-
-    user_message = (request.form.get("message") or "").strip()
-    session_id = (request.form.get("session_id") or "").strip() or uuid.uuid4().hex
-    request_full_report = (request.form.get("request_full_report") or "false").lower() == "true"
-
-    attachment = {"url": "", "file_type": ""}
-    file = request.files.get("file")
-    if file and file.filename:
-        original = file.filename
-        ext = Path(original).suffix.lower()
-        if ext != ".pdf":
-            return jsonify({"error": "目前仅支持 PDF 年报。"}), 400
-
-        safe_name = f"{uuid.uuid4().hex}.pdf"
-        save_path = UPLOAD_DIR / safe_name
-        file.save(save_path)
-        if save_path.stat().st_size > MAX_PDF_BYTES:
-            save_path.unlink(missing_ok=True)
-            return jsonify({"error": "PDF 超过 30 MB，请压缩后再上传。"}), 400
-
-        attachment = {
-            "url": _public_upload_url(safe_name),
-            "file_type": "pdf",
-        }
-
-    payload = {
-        "user_message": user_message,
-        "attachment": attachment,
-        "session_id": session_id,
-        "request_full_report": request_full_report,
-    }
-
+    # 没有上传新 PDF 的普通多轮聊天/补参数走同步接口，通常很快。
     try:
         resp = requests.post(
             COZE_API_URL,
-            headers={
-                "Authorization": f"Bearer {COZE_API_TOKEN}",
-                "Content-Type": "application/json",
-            },
+            headers=_headers(),
             json=payload,
-            timeout=300,
+            timeout=90,
         )
     except requests.RequestException as exc:
         return jsonify({"error": f"调用分析服务失败：{exc}"}), 502
 
-    try:
-        data = resp.json()
-    except ValueError:
-        return jsonify({"error": f"分析服务返回非 JSON（HTTP {resp.status_code}）。", "raw": resp.text[:2000]}), 502
+    data, parse_error = _json_or_error(resp)
+    if parse_error:
+        return jsonify(parse_error), 502
 
     if not resp.ok:
-        return jsonify({"error": "分析服务返回错误。", "detail": data}), resp.status_code
+        return jsonify({
+            "error": "分析服务返回错误。",
+            "detail": data,
+        }), resp.status_code
 
-    # Coze /run may return the graph output directly or wrap it.
-    if isinstance(data, dict):
-        if isinstance(data.get("data"), dict):
-            out = data["data"]
-        elif isinstance(data.get("output"), dict):
-            out = data["output"]
-        else:
-            out = data
-    else:
-        out = {"reply": str(data)}
+    out = _unwrap_output(data)
+    return jsonify(_normalize_reply(out, session_id))
 
-    reply = out.get("reply") or out.get("message") or "分析已完成，但未返回文本回复。"
-    return jsonify({
-        "session_id": session_id,
-        "reply": reply,
-        "document_identity": out.get("document_identity", ""),
-        "agent1_cached": out.get("agent1_cached", False),
-        "markdown_report": out.get("markdown_report", ""),
-        "raw": out,
+
+@app.get("/api/task/<task_id>")
+def task_status(task_id: str):
+    if not COZE_API_TOKEN:
+        return jsonify({"error": "服务器尚未配置 COZE_API_TOKEN。"}), 500
+
+    session_id = (request.args.get("session_id") or "").strip()
+
+    try:
+        resp = requests.get(
+            f"{COZE_TASK_URL}/{task_id}",
+            headers={"Authorization": f"Bearer {COZE_API_TOKEN}"},
+            timeout=30,
+        )
+    except requests.RequestException as exc:
+        return jsonify({"error": f"查询分析任务失败：{exc}"}), 502
+
+    data, parse_error = _json_or_error(resp)
+    if parse_error:
+        return jsonify(parse_error), 502
+
+    if not resp.ok:
+        return jsonify({
+            "error": "查询分析任务失败。",
+            "detail": data,
+        }), resp.status_code
+
+    # 兼容少数可能的 data 包装
+    task = data
+    if isinstance(data, dict) and isinstance(data.get("data"), dict):
+        task = data["data"]
+
+    if not isinstance(task, dict):
+        return jsonify({
+            "error": "异步任务返回格式异常。",
+            "detail": data,
+        }), 502
+
+    status = str(task.get("status") or "").lower()
+
+    if status in {"pending", "running", ""}:
+        return jsonify({
+            "status": status or "running",
+            "task_id": task_id,
+        })
+
+    if status in {"failed", "timeout"}:
+        return jsonify({
+            "status": status,
+            "task_id": task_id,
+            "error": task.get("error") or f"任务状态：{status}",
+        })
+
+    if status != "completed":
+        return jsonify({
+            "status": status,
+            "task_id": task_id,
+            "raw": task,
+        })
+
+    result = task.get("result")
+    out = _unwrap_output(result)
+    normalized = _normalize_reply(out, session_id)
+    normalized.update({
+        "status": "completed",
+        "task_id": task_id,
     })
+    return jsonify(normalized)
+
+
+@app.errorhandler(413)
+def too_large(_):
+    return jsonify({"error": "PDF 超过上传限制，请压缩后再上传。"}), 413
 
 
 if __name__ == "__main__":

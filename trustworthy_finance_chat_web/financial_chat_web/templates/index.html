@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>可信金融投研助手</title>
+  <style>
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,"Microsoft YaHei",system-ui,sans-serif;background:#f6f7f9;color:#151515}
+    .app{height:100vh;display:flex;flex-direction:column;max-width:980px;margin:0 auto;background:#fff;border-left:1px solid #eee;border-right:1px solid #eee}
+    header{padding:18px 22px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+    .title{font-size:18px;font-weight:700}.sub{font-size:12px;color:#777;margin-top:3px}
+    .badge{font-size:12px;padding:6px 10px;border-radius:999px;background:#f0f2f5;color:#555}
+    #messages{flex:1;overflow:auto;padding:24px 22px}
+    .row{display:flex;margin:12px 0}.row.user{justify-content:flex-end}.bubble{max-width:78%;padding:12px 14px;border-radius:16px;white-space:pre-wrap;line-height:1.6;font-size:14px}
+    .ai .bubble{background:#f1f3f5;border-top-left-radius:5px}.user .bubble{background:#171717;color:#fff;border-top-right-radius:5px}
+    .meta{font-size:11px;color:#999;margin-top:5px}
+    .composer{padding:14px 16px;border-top:1px solid #eee;background:#fff}.attachline{display:flex;align-items:center;gap:10px;margin-bottom:9px;min-height:30px}.filechip{display:none;padding:6px 10px;border-radius:10px;background:#f2f3f5;font-size:12px}
+    .inputrow{display:flex;gap:8px;align-items:flex-end}.inputwrap{flex:1;border:1px solid #dcdfe3;border-radius:16px;padding:10px 12px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+    textarea{width:100%;border:none;outline:none;resize:none;min-height:48px;max-height:130px;font:inherit;background:transparent}.actions{display:flex;gap:8px;align-items:center;margin-top:8px}
+    button,.filebtn{border:none;border-radius:12px;padding:9px 14px;font-weight:600;cursor:pointer}.send{background:#151515;color:#fff}.secondary,.filebtn{background:#f0f2f4;color:#333}.send:disabled{opacity:.5;cursor:not-allowed}
+    input[type=file]{display:none}.status{font-size:12px;color:#777;margin-left:auto}.warn{color:#a55}
+    details{margin-top:8px}.report{margin-top:8px;padding:12px;background:#fafafa;border:1px solid #eee;border-radius:12px;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;max-height:360px;overflow:auto}
+    @media(max-width:650px){.bubble{max-width:90%}.app{border:0}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div><div class="title">可信金融投研助手</div><div class="sub">基于年报事实、可追溯计算与审计门禁</div></div>
+    <div class="badge">Decision Support · Not Investment Advice</div>
+  </header>
+  <main id="messages">
+    <div class="row ai"><div><div class="bubble">你好。你可以上传一家上市公司的年度报告 PDF，并告诉我“帮我分析这家公司”。如果估值还缺 WACC、增长率等参数，我会继续向你确认，不会自动编造。</div></div></div>
+  </main>
+  <section class="composer">
+    <div class="attachline">
+      <label class="filebtn" for="file">📎 上传年报 PDF</label>
+      <input id="file" type="file" accept="application/pdf,.pdf" />
+      <span id="filechip" class="filechip"></span>
+      <span id="status" class="status"></span>
+    </div>
+    <div class="inputrow">
+      <div class="inputwrap">
+        <textarea id="message" placeholder="输入问题，例如：帮我分析一下这家公司"></textarea>
+        <div class="actions">
+          <button id="full" class="secondary" type="button">完整报告</button>
+          <span class="status">同一会话会复用已解析年报</span>
+        </div>
+      </div>
+      <button id="send" class="send" type="button">发送</button>
+    </div>
+  </section>
+</div>
+<script>
+const messages = document.getElementById('messages');
+const message = document.getElementById('message');
+const fileInput = document.getElementById('file');
+const filechip = document.getElementById('filechip');
+const statusEl = document.getElementById('status');
+const sendBtn = document.getElementById('send');
+const fullBtn = document.getElementById('full');
+const sessionId = localStorage.getItem('finance_session_id') || crypto.randomUUID();
+localStorage.setItem('finance_session_id', sessionId);
+
+function addBubble(text, who='ai', report='') {
+  const row = document.createElement('div'); row.className = 'row ' + who;
+  const box = document.createElement('div');
+  const bubble = document.createElement('div'); bubble.className='bubble'; bubble.textContent=text;
+  box.appendChild(bubble);
+  if (report) {
+    const details=document.createElement('details');
+    const sum=document.createElement('summary'); sum.textContent='查看完整 Markdown 报告';
+    const pre=document.createElement('div'); pre.className='report'; pre.textContent=report;
+    details.appendChild(sum); details.appendChild(pre); box.appendChild(details);
+  }
+  row.appendChild(box); messages.appendChild(row); messages.scrollTop=messages.scrollHeight;
+}
+
+fileInput.addEventListener('change', () => {
+  const f=fileInput.files[0];
+  if(f){filechip.style.display='inline-block'; filechip.textContent='📄 '+f.name;} else {filechip.style.display='none';}
+});
+
+async function send(fullReport=false){
+  const text=(message.value||'').trim();
+  const f=fileInput.files[0];
+  if(!text && !f && !fullReport) return;
+  if(text) addBubble(text,'user');
+  if(f) addBubble('已选择文件：'+f.name,'user');
+  sendBtn.disabled=true; statusEl.textContent='分析中…';
+  const fd=new FormData();
+  fd.append('message', fullReport && !text ? '完整报告' : text);
+  fd.append('session_id', sessionId);
+  fd.append('request_full_report', fullReport ? 'true' : 'false');
+  if(f) fd.append('file', f);
+  try{
+    const r=await fetch('/api/chat',{method:'POST',body:fd});
+    const data=await r.json();
+    if(!r.ok) throw new Error(data.error || '请求失败');
+    addBubble(data.reply || '已完成。','ai',data.markdown_report || '');
+    message.value=''; fileInput.value=''; filechip.style.display='none';
+    if(data.agent1_cached) statusEl.textContent='已复用年报缓存'; else statusEl.textContent='';
+  }catch(e){ addBubble('请求失败：'+e.message,'ai'); statusEl.textContent=''; }
+  finally{sendBtn.disabled=false;}
+}
+
+sendBtn.addEventListener('click',()=>send(false));
+fullBtn.addEventListener('click',()=>send(true));
+message.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(false);}});
+</script>
+</body>
+</html>

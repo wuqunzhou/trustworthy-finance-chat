@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: trustworthy-finance-chat
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -b 0.0.0.0:$PORT app:app
+    envVars:
+      - key: COZE_API_URL
+        value: https://bysb7qrsyw.coze.site/run
+      - key: COZE_API_TOKEN
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false

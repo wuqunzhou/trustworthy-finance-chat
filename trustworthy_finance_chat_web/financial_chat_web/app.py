@@ -69,11 +69,13 @@ def chat():
         }
 
     payload = {
-        "user_message": user_message,
-        "attachment": attachment,
-        "session_id": session_id,
-        "request_full_report": request_full_report,
-    }
+    "user_message": user_message,
+    "session_id": session_id,
+    "request_full_report": request_full_report,
+}
+
+if attachment is not None:
+    payload["attachment"] = attachment
 
     try:
         resp = requests.post(

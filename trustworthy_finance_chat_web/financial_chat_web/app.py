@@ -56,6 +56,11 @@ def _normalize_pdf_cache_key(filename: str) -> str:
 
 
 app = Flask(__name__)
+
+@app.route("/showcase", methods=["GET"])
+def competition_showcase():
+    return render_template("showcase.html")
+
 app.config["MAX_CONTENT_LENGTH"] = MAX_PDF_BYTES + 1024 * 1024
 
 

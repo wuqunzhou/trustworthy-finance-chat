@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>公告事件分析 · 可信金融投研助手</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f2f5fa;color:#173354;font-family:Arial,"Microsoft YaHei",sans-serif}
+header{background:#173b65;color:white;padding:22px 7%;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{font-size:21px;margin:0 0 8px}
+header p{margin:0;color:#c5d7e9;font-size:13px}
+nav a{color:white;text-decoration:none;margin-left:14px;font-size:13px}
+main{max-width:1040px;margin:36px auto;padding:0 20px}
+.intro{margin-bottom:26px}
+.intro h2{font-size:26px;margin-bottom:8px}
+.intro p{color:#64748b;line-height:1.8}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.panel{background:white;padding:26px;border-radius:16px;box-shadow:0 4px 18px #1935520b}
+.panel h3{margin-top:0}
+label{display:block;font-size:13px;font-weight:bold;margin:18px 0 7px}
+input,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;font:inherit;background:white}
+textarea{min-height:220px;resize:vertical;line-height:1.7}
+button{border:0;border-radius:9px;background:#2563eb;color:white;padding:13px 22px;cursor:pointer;font-weight:bold;margin-top:18px}
+button:hover{background:#1d4ed8}
+.note{background:#eff6ff;color:#335475;padding:14px;border-radius:9px;font-size:13px;line-height:1.8}
+.status{padding:12px;border-radius:9px;background:#fff7ed;color:#9a3412;margin:15px 0}
+.detail{padding:12px;background:#f8fafc;border-radius:8px;margin-top:12px;line-height:1.7;overflow-wrap:anywhere}
+small{color:#64748b}
+footer{text-align:center;color:#64748b;padding:35px 16px;font-size:12px}
+@media(max-width:760px){.layout{grid-template-columns:1fr}header{padding:20px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>可信金融投研助手</h1>
+    <p>公告事件分析 · Narrative Intelligence</p>
+  </div>
+  <nav>
+    <a href="/">年报交互分析</a>
+    <a href="/showcase">初赛案例展示</a>
+  </nav>
+</header>
+
+<main>
+  <div class="intro">
+    <h2>公司公告与新闻事件分析</h2>
+    <p>输入企业公告或新闻原文，准备进行事件识别、证据审核与财务影响分析。</p>
+  </div>
+
+  <div class="layout">
+    <section class="panel">
+      <h3>第一步 · 输入公告</h3>
+
+      <label for="company">目标公司</label>
+      <input id="company" placeholder="例如：贵州茅台">
+
+      <label for="date">公告日期</label>
+      <input id="date" type="date">
+
+      <label for="source">公告来源链接</label>
+      <input id="source" type="url" placeholder="https://...">
+
+      <label for="content">公告或新闻原文</label>
+      <textarea id="content" placeholder="请粘贴完整的公告或新闻正文，不要仅输入标题。"></textarea>
+
+      <button type="button" id="checkBtn">检查输入材料 →</button>
+
+      <p><small>当前版本先进行浏览器本地输入检查，尚未连接实时LLM接口。</small></p>
+    </section>
+
+    <section class="panel">
+      <h3>第二步 · 分析结果</h3>
+
+      <div class="note">
+        <strong>可信分析原则</strong>
+        <p>LLM负责提取事件与文本证据；审核程序控制参数准入；确定性模型负责财务传导和估值计算。</p>
+      </div>
+
+      <div id="status" class="status">
+        等待输入公告材料
+      </div>
+
+      <div id="results" aria-live="polite">
+        <div class="detail">
+          <strong>当前状态</strong>
+          <p>请先填写左侧信息，点击“检查输入材料”。</p>
+        </div>
+      </div>
+
+      <div class="detail">
+        <strong>已验证的历史案例</strong>
+        <p>贵州茅台2023年提价公告，LLM已成功提取正向收入增长信号，并通过原文证据匹配。</p>
+        <p>Reviewer结果：<strong>needs_review</strong>。</p>
+        <p>审核未批准，因此程序拒绝修改估值参数。</p>
+        <a href="/showcase">查看综合展示 →</a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  可信金融投研助手 · 初赛原型 · 仅供研究演示，不构成投资建议
+</footer>
+
+<script>
+const byId = id => document.getElementById(id);
+
+byId("checkBtn").addEventListener("click", () => {
+  const company = byId("company").value.trim();
+  const date = byId("date").value;
+  const source = byId("source").value.trim();
+  const content = byId("content").value.trim();
+
+  if (!company || !date || !source || !content) {
+    byId("status").textContent = "请填写公司、日期、来源链接和公告原文。";
+    return;
+  }
+
+  let url;
+  try {
+    url = new URL(source);
+    if (!["http:", "https:"].includes(url.protocol)) throw Error();
+  } catch (_) {
+    byId("status").textContent = "请输入有效的 http 或 https 公告来源链接。";
+    return;
+  }
+
+  if (content.length < 30) {
+    byId("status").textContent = "公告文字太短，请提供至少30个字符的原文。";
+    return;
+  }
+
+  byId("status").textContent = "输入检查通过 · 尚未调用LLM";
+  const results = byId("results");
+  results.replaceChildren();
+
+  const box = document.createElement("div");
+  box.className = "detail";
+
+  const title = document.createElement("strong");
+  title.textContent = "已接收的分析材料";
+
+  const summary = document.createElement("p");
+  summary.textContent = `公司：${company}；日期：${date}；原文长度：${content.length}字符。`;
+
+  const notice = document.createElement("p");
+  notice.textContent = "材料已在当前页面完成输入检查。实时AI提取与审核API尚待接入，本次没有产生AI判断或估值结果。";
+
+  box.append(title, summary, notice);
+  results.appendChild(box);
+});
+</script>
+
+</body>
+</html>

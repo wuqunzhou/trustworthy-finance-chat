@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>可信金融投研助手 · 初赛展示</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f6fb;color:#17243a;
+font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif}
+header{background:linear-gradient(120deg,#122745,#24558a);
+color:white;padding:52px max(24px,calc((100% - 1080px)/2))}
+header h1{font-size:34px;margin:12px 0}
+header p{color:#d9e6f5;line-height:1.8}
+main{max-width:1080px;margin:30px auto;padding:0 20px}
+.tags{display:flex;flex-wrap:wrap;gap:9px;margin-top:20px}
+.tag{padding:7px 12px;border:1px solid #ffffff55;
+border-radius:20px;font-size:13px}
+.banner{background:#fff4e5;border-left:4px solid #ca8432;
+padding:16px 20px;border-radius:9px;margin-bottom:22px;line-height:1.8}
+.card{background:white;padding:26px;border-radius:15px;
+margin-bottom:22px;box-shadow:0 5px 20px #15365b0c}
+.card h2{margin:0 0 18px;color:#163f72;font-size:21px}
+.card h3{font-size:17px}
+.card p{line-height:1.85}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+td{border-bottom:1px solid #e8edf3;padding:12px;text-align:left}
+tr:first-child{background:#edf3fa;font-weight:600}
+blockquote{margin:12px 0;background:#f2f6fa;
+border-left:3px solid #8ea9c5;padding:12px;line-height:1.8}
+footer{padding:30px;text-align:center;color:#78869a;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+<div>FINANCIAL RESEARCH · TRUSTWORTHY AI</div>
+<h1>可信金融投研助手</h1>
+<p>贵州茅台 · 2025年度报告 · 叙事增强估值机制展示</p>
+<div class="tags">
+<span class="tag">财报缓存</span>
+<span class="tag">DCF / RIM</span>
+<span class="tag">事件财务传导</span>
+<span class="tag">Monte Carlo</span>
+<span class="tag">隔离演示</span>
+</div>
+</header>
+<main>
+<div class="banner">
+<strong>演示数据与审核声明</strong><br>
+本页面使用历史财报解析缓存与未校准的演示假设。
+正式财务准入状态为 blocked，相关估值不能作为真实投资目标价。
+部分模拟案例使用独立的模拟财务数据，不与贵州茅台实际财报估值混同。
+</div>
+<section class="card">
+    <h2>财务事实与准入审核</h2>
+    <p>• 准入结果：blocked</p>
+<p>• 报告元数据通过：False</p>
+<p>• 冲突指标：finance_expense, net_income_to_parent, operating_cash_flow, operating_cost, rd_expense, revenue, total_shares</p>
+<p>• 说明：blocked状态下，不得宣称相关财务指标已全部核验通过。</p>
+    </section>
+<section class="card">
+    <h2>基准估值与模型局限</h2>
+    <p>该部分尚未生成</p>
+    </section>
+<section class="card">
+    <h2>提价事件的财务传导</h2>
+    <p>以下假设仅用于机制演示：公司基准收入100万元，受影响业务占比40%，增量OCF转化系数30%。</p>
+<div class='table-wrap'><table>
+<tr><td>情景</td><td>假设销量变化</td><td>公司收入变化率</td><td>增量经营现金流</td></tr>
+<tr><td>bull</td><td>+0%</td><td>+3.152%</td><td>9,456.26</td></tr>
+<tr><td>base</td><td>-5%</td><td>+0.994%</td><td>2,983.45</td></tr>
+<tr><td>bear</td><td>-10%</td><td>-1.163%</td><td>-3,489.36</td></tr>
+</table></div>
+    </section>
+<section class="card">
+    <h2>Monte Carlo 模拟</h2>
+    <blockquote>使用完全模拟的公司财务数据，不是上述贵州茅台年报的DCF估值，也尚未与提价财务传导模型定量连接。</blockquote>
+<div class='table-wrap'><table>
+<tr><td>指标</td><td>模拟基准</td><td>模拟叙事情景</td></tr>
+<tr><td>增长率中心</td><td>5.0%</td><td>5.5%</td></tr>
+<tr><td>中位估值</td><td>224.86</td><td>229.79</td></tr>
+<tr><td>5%～95%分位区间</td><td>197.43～261.12</td><td>201.77～266.91</td></tr>
+</table></div>
+    </section>
+<section class="card">
+    <h2>情景DCF重估</h2>
+    <blockquote>使用年报缓存中的财务候选值及演示假设，不是通过正式财务准入的投资估值。</blockquote>
+<div class='table-wrap'><table>
+<tr><td>情景</td><td>假设销量变化</td><td>DCF每股估值</td></tr>
+<tr><td>无提价冲击参考基线</td><td>不施加事件冲击</td><td>1185.73元</td></tr>
+<tr><td>乐观 Bull</td><td>+0%</td><td>1216.50元</td></tr>
+<tr><td>中间 Base</td><td>-5%</td><td>1195.44元</td></tr>
+<tr><td>悲观 Bear</td><td>-10%</td><td>1174.38元</td></tr>
+</table></div>
+<p>以上结果采用演示性40%业务收入占比、30%增量经营现金流转化率，并使用简化OCF-DCF计算。收入冲击的持续时间和现金流转化尚未经过校准。</p>
+    </section>
+<section class="card">
+    <h2>仍需完成的创新验证</h2>
+    <p>1. 解决财报关键指标冲突，取得可核验输入。</p>
+<p>2. 用公司销售结构与现金流资料校准财务传导。</p>
+<p>3. 将传导结果与DCF参数建立有依据的联系。</p>
+<p>4. 比较通用LLM和证据约束系统的分析质量。</p>
+<p>5. 完成网站集成、跨公司验证和初赛视频。</p>
+<p>**限制：**当前蒙特卡洛分位数不等于未来市场价格的真实概率区间。</p>
+    </section>
+<section class="card">
+<h2>分析方法说明</h2>
+<p>通过财务数据审核、基准估值、事件财务传导、
+情景估值及模拟分析，展示叙事增强估值系统的原型能力。
+目前综合案例尚未证明从实时新闻自动提取到估值重算的全流程自动化。</p>
+</section>
+</main>
+<footer>可信金融投研助手 · 初赛原型 · 仅供研究演示</footer>
+</body>
+</html>

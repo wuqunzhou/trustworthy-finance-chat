@@ -69,6 +69,12 @@ def index():
     return render_template("index.html")
 
 
+@app.get("/events")
+def events_page():
+    return render_template("events.html")
+
+
+
 @app.get("/health")
 def health():
     return {"ok": True}

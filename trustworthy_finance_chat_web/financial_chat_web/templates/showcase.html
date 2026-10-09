@@ -110,6 +110,62 @@ footer{padding:30px;text-align:center;color:#78869a;font-size:13px}
 情景估值及模拟分析，展示叙事增强估值系统的原型能力。
 目前综合案例尚未证明从实时新闻自动提取到估值重算的全流程自动化。</p>
 </section>
+
+<section style="background:white;border-radius:14px;padding:28px;margin:24px 0;box-shadow:0 2px 12px #102d5210;">
+  <h2 style="color:#123b68;margin-top:0;">真实公告 · AI叙事信号分析</h2>
+  <p style="color:#64748b;">
+    真实LLM运行记录｜贵州茅台2023年历史提价事件｜非实时新闻分析
+  </p>
+
+  <div style="background:#eff6ff;padding:18px;border-radius:10px;margin:18px 0;">
+    <strong>第一步：公司公告输入</strong>
+    <p>贵州茅台2023年11月1日公告：53度贵州茅台酒（飞天、五星）出厂价格平均上调约20%。</p>
+    <a href="https://www.moutai.com.cn/maotaigf/fileDir/resource/cms/article/408428/570257/2023110116333232180.pdf"
+       target="_blank" rel="noopener noreferrer">
+      查看公告来源 ↗
+    </a>
+  </div>
+
+  <div style="background:#f1f5f9;padding:18px;border-radius:10px;margin-bottom:18px;">
+    <strong>第二步：LLM自动提取结果</strong>
+    <p>识别事件：上调核心产品出厂价格</p>
+    <p>影响变量：营业收入增长率（revenue_growth）</p>
+    <p>影响方向：正向（positive）</p>
+    <p>信号强度：中等（medium）</p>
+    <p>模型自评置信度：0.80（非实际预测准确率）</p>
+    <p style="font-size:13px;color:#475569;">
+      提取证据已通过程序原文匹配，但不等于经济影响已经核实。
+    </p>
+  </div>
+
+  <div style="background:#fff7ed;border-left:4px solid #ea580c;padding:18px;border-radius:8px;margin-bottom:18px;">
+    <strong>第三步：可信审核与参数准入</strong>
+    <p>Reviewer审核状态：needs_review</p>
+    <p>原因：尚未完成来源真实性、企业关联性及因果传导的进一步核验。</p>
+    <p><strong>系统处理：禁止自动修改估值参数。</strong></p>
+  </div>
+
+  <div style="background:#f8fafc;padding:18px;border-radius:10px;">
+    <strong>第四步：确定性参数映射测试</strong>
+    <p>演示基准收入增长率：5%</p>
+    <p>悲观情景：5% → 5%</p>
+    <p>基准情景：5% → 5%</p>
+    <p>乐观情景：5% → 5%</p>
+    <p style="color:#166534;font-weight:bold;">
+      PASS：未经审批的LLM信号未改变估值假设
+    </p>
+  </div>
+
+  <p style="font-size:12px;color:#64748b;margin-top:18px;">
+    本模块展示已运行并保存的历史案例结果，不是网页实时LLM调用。
+    提价20%不等于公司收入增长20%；演示增长率5%为假设值。
+  </p>
+
+  <a href="/" style="display:inline-block;margin-top:10px;color:#1d4ed8;font-weight:bold;">
+    返回金融投研聊天首页 →
+  </a>
+</section>
+
 </main>
 <footer>可信金融投研助手 · 初赛原型 · 仅供研究演示</footer>
 </body>

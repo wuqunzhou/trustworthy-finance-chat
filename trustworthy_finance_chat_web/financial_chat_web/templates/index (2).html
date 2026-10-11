@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="可信金融投研助手：年报分析、公司公告事件识别、证据追溯与估值审核。" />
+  <title>可信金融投研助手 · 年报与公告智能分析</title>
+  <style>
+    :root{color-scheme:light;--navy:#172c43;--blue:#235bb9;--text:#17243a;--muted:#637184;--border:#dfe6ed;--pale:#f4f7fb}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,"Microsoft YaHei", "PingFang SC",system-ui,sans-serif;background:linear-gradient(135deg,#edf2f7,#f8fafc 55%,#eaf0f8);color:var(--text)}
+    button,input,textarea{font:inherit}
+    button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid #7bb1ff;outline-offset:2px}
+    .app{height:100vh;height:100dvh;display:flex;flex-direction:column;max-width:1160px;min-height:420px;margin:0 auto;background:#fff;box-shadow:0 14px 64px rgba(21,43,70,.1)}
+    header{padding:16px 26px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:16px;background:#fff}
+    .brand{display:flex;align-items:center;gap:13px;min-width:0}
+    .brand-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;color:#fff;font-size:23px;font-weight:800;background:linear-gradient(135deg,#152d49,#326dba);box-shadow:0 5px 14px #16365b25;flex-shrink:0}
+    .title{font-size:19px;font-weight:800;letter-spacing:.2px;line-height:1.2}
+    .sub{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.5}
+    .nav-links{display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .nav-link{text-decoration:none;font-size:13px;font-weight:700;padding:10px 13px;border-radius:10px;white-space:nowrap;color:#334761;transition:background .15s}
+    .nav-link.active{background:#edf3fc;color:var(--blue)}
+    .nav-link.showcase{background:#235bb9;color:#fff}
+    .nav-link:hover{filter:brightness(.95)}
+    .info-strip{display:flex;gap:14px;align-items:center;justify-content:space-between;padding:11px 26px;background:#f8fafc;border-bottom:1px solid #e9eef5;font-size:12px;color:#5b6b7f}
+    .info-strip .bullet{display:inline-block;width:7px;height:7px;border-radius:50%;background:#2e9d7f;margin-right:8px}
+    .info-note{font-weight:600;color:#334e70}
+    #messages{flex:1;overflow:auto;padding:25px 32px 30px;min-height:0;scroll-behavior:smooth}
+    .welcome{border:1px solid #dae5f2;background:linear-gradient(110deg,#f6f9fd 0%,#fff 65%);border-radius:20px;padding:24px 26px;margin-bottom:24px}
+    .eyebrow{display:inline-flex;align-items:center;gap:7px;color:#2c5e99;font-size:12px;letter-spacing:.4px;font-weight:800;margin-bottom:9px}
+    .welcome h1{font-size:23px;line-height:1.35;letter-spacing:-.5px;margin:0 0 8px;color:#142942}
+    .welcome p{margin:0;color:#5b6d80;font-size:13px;line-height:1.8}
+    .feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-top:18px}
+    .feature{padding:14px 14px;border-radius:13px;background:#fff;border:1px solid #e4eaf2;min-width:0}
+    .feature strong{font-size:13px;display:block;margin-bottom:6px;color:#183c67}
+    .feature span{font-size:12px;line-height:1.7;color:#68798a;display:block}
+    .quickbar{display:flex;flex-wrap:wrap;align-items:center;gap:9px;padding:12px 32px;background:#fff;border-bottom:1px solid #edf0f5}
+    .quickbar-label{font-size:12px;color:#7b8795;font-weight:700;margin-right:2px}
+    .quick-btn{background:#fff;border:1px solid #dae2ed;color:#254465;font-size:12px;font-weight:750;padding:9px 14px;border-radius:9px}
+    .quick-btn.primary{background:#eaf2ff;border-color:#d0e0fb;color:#1952a2}
+    .quick-btn:hover{border-color:#a9c3e5;background:#f4f8fe}
+    .quick-tip{margin-left:auto;font-size:11px;color:#8490a0}
+    .row{display:flex;margin:15px 0}.row.user{justify-content:flex-end}
+    .message-body{max-width:min(90%,920px);min-width:0}
+    .bubble{padding:13px 17px;border-radius:15px;white-space:pre-wrap;line-height:1.78;font-size:14px;overflow-wrap:anywhere;word-break:break-word}
+    .ai .bubble{background:#f2f5f8;color:#293748;border-top-left-radius:5px}
+    .user .bubble{background:#193a62;color:#fff;border-top-right-radius:5px}
+    .composer{padding:13px 24px 18px;border-top:1px solid var(--border);background:#fff}
+    .attachline{display:flex;align-items:center;gap:10px;margin-bottom:9px;min-height:32px;flex-wrap:wrap}
+    .filechip{display:none;padding:7px 11px;border-radius:10px;background:#edf3fb;color:#254569;font-size:12px;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .inputrow{display:flex;gap:11px;align-items:flex-end}
+    .inputwrap{flex:1;min-width:0;border:1px solid #d5deea;border-radius:14px;padding:12px 14px;box-shadow:0 2px 8px rgba(20,52,82,.04);transition:border-color .16s}
+    .inputwrap:focus-within{border-color:#6b9bda}
+    textarea{width:100%;border:none;outline:none;resize:vertical;min-height:58px;max-height:220px;font-size:14px;line-height:1.6;background:transparent;color:var(--text)}
+    textarea::placeholder{color:#9aa5b3}
+    .actions{display:flex;gap:9px;align-items:center;margin-top:4px;flex-wrap:wrap}
+    button,.filebtn{border:none;border-radius:10px;padding:9px 13px;font-weight:700;cursor:pointer;transition:background .15s}
+    .send{background:#205ab5;color:#fff;padding:15px 20px;min-height:48px;white-space:nowrap}
+    .send:hover{background:#154998}
+    .secondary,.filebtn{background:#eef2f6;color:#344c69;font-size:12px}
+    .secondary:hover,.filebtn:hover{background:#e2eafa}
+    .send:disabled,.secondary:disabled,.filebtn.disabled,.quick-btn:disabled{opacity:.5;cursor:not-allowed}
+    input[type=file]{display:none}
+    .status{font-size:11px;color:#8290a0;margin-left:auto}
+    .status.busy{color:#9f640a}
+    details{margin-top:9px}
+    details summary{font-size:12px;color:#235bb9;cursor:pointer}
+    .report{margin-top:8px;padding:13px;background:#f9fbff;border:1px solid #e2e8f2;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;max-height:360px;overflow:auto}
+    .progress{display:none;margin:0 0 10px 0;padding:10px 12px;background:#fff8e8;border:1px solid #f0dfad;border-radius:10px;font-size:12px;color:#6e560d}
+    .footer-note{font-size:11px;color:#8792a0;padding-top:10px;line-height:1.5}
+
+    .scenario-card{width:min(100%,810px);background:#fff;border:1px solid #b9d0ed;border-radius:16px;padding:19px 20px;box-shadow:0 5px 18px rgba(26,62,112,.08);line-height:1.7}
+    .scenario-card h3{margin:0 0 8px;font-size:17px;color:#153d70}
+    .scenario-card p{font-size:12px;color:#5b7088;margin:6px 0 12px}
+    .scenario-pill{font-size:11px;font-weight:800;color:#865500;background:#fff6df;border-radius:99px;padding:5px 10px;display:inline-block;margin-bottom:8px}
+    .scenario-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:#f6f9fd;border:1px solid #e0e9f4;border-radius:12px;padding:13px;margin:12px 0}
+    .scenario-controls input[type=number]{width:110px;border:1px solid #b8cbe2;border-radius:8px;padding:8px 10px;font-size:14px;color:#133d71;background:#fff}
+    .scenario-controls label{font-size:13px;font-weight:700;color:#294d75}
+    .scenario-consent{display:flex;gap:9px;align-items:flex-start;font-size:12px;color:#57687e;margin-bottom:12px}
+    .scenario-consent input{flex:none;margin-top:5px;accent-color:#205ab5}
+    .scenario-run{background:#235bb9;color:#fff;border-radius:10px;padding:10px 16px;font-size:13px}
+    .scenario-run:disabled{opacity:.5;cursor:not-allowed}
+    .scenario-results{margin-top:12px;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;padding:13px;background:#f1f6fc;border-radius:10px;color:#213952}
+    .sample-disclosure{margin:8px 0 2px;border:0;padding:0;font-size:12px}
+    .sample-disclosure summary{color:#6e7b8e;font-size:12px}
+    .sample-disclosure button{margin:9px 0 1px}
+    @media(max-width:760px){
+       header{padding:13px 15px}.title{font-size:16px}.sub{font-size:10px}
+       .brand-icon{width:36px;height:36px;font-size:18px}
+       .nav-links{gap:4px}.nav-link{font-size:11px;padding:8px 9px}
+       #messages{padding:17px 14px}.quickbar{padding:9px 13px;gap:7px}.quick-tip{display:none}
+       .welcome{padding:18px}.welcome h1{font-size:19px}.feature-grid{grid-template-columns:1fr;gap:7px;margin-top:13px}.feature{padding:11px}
+       .message-body{max-width:94%}.composer{padding:11px 12px}.send{padding:12px 13px}
+       .info-strip{padding:8px 14px;font-size:11px}.info-note{display:none}
+    }
+    @media(max-width:390px){.sub{display:none}.brand{gap:8px}.nav-link{padding:7px}.nav-links .active{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="brand-icon" aria-hidden="true">信</div>
+      <div>
+        <div class="title">可信金融投研助手</div>
+        <div class="sub">基于事实证据的金融分析 · 事件理解 · 审核门禁</div>
+      </div>
+    </div>
+    <nav class="nav-links" aria-label="主导航">
+      <a class="nav-link active" href="/" aria-current="page">AI交互分析</a>
+      <a class="nav-link showcase" href="/showcase">案例与方法 ↗</a>
+    </nav>
+  </header>
+  <div class="info-strip">
+    <span><span class="bullet"></span>统一入口 · 年报与公告双路径</span>
+    <span class="info-note">未经审核的信息不会直接修改正式估值参数</span>
+  </div>
+  <div class="quickbar" role="group" aria-label="分析快捷入口">
+    <span class="quickbar-label">快速开始</span>
+    <button class="quick-btn primary" type="button" data-template="annual">📄 年报分析</button>
+    <button class="quick-btn" type="button" data-template="event">📢 公告分析</button>
+    <span class="quick-tip">点击仅填入输入框，不自动发送</span>
+  </div>
+  <main id="messages" aria-label="分析对话">
+    <section class="welcome" aria-label="产品介绍">
+      <div class="eyebrow">● FINANCIAL RESEARCH ASSISTANT</div>
+      <h1>让金融分析有来源、有边界、可追溯</h1>
+      <p>上传上市公司年报，或粘贴公司公告。系统协助提取财务事实与事件信号，并对分析结果设置审核门禁；缺少关键参数时明确提示，不编造事实。</p>
+      <div class="feature-grid">
+        <div class="feature"><strong>01 / 年报事实提取</strong><span>识别财务信息与来源证据，支持估值分析及必要参数追问。</span></div>
+        <div class="feature"><strong>02 / 公告事件解读</strong><span>分析事件方向和潜在财务影响，返回原文依据。</span></div>
+        <div class="feature"><strong>03 / 可信审核机制</strong><span>未经审核的信息保持隔离，不直接修改正式估值参数。</span></div>
+      </div>
+    </section>
+    <div class="row ai"><div class="message-body"><div class="bubble">你好！你可以点击上方「年报分析」或「公告分析」，也可以直接在下方输入问题。公告分析成功后，可在下方开启由用户授权假设的隔离情景试算；试算不会修改正式估值。</div></div></div>
+  </main>
+  <section class="composer" aria-label="发送分析请求">
+    <div id="progress" class="progress" role="status" aria-live="polite"></div>
+    <div class="attachline">
+      <label id="fileLabel" class="filebtn" for="file">📎 上传年报 PDF</label>
+      <input id="file" type="file" accept="application/pdf,.pdf" />
+      <span id="filechip" class="filechip"></span>
+      <span id="status" class="status" aria-live="polite"></span>
+    </div>
+    <div class="inputrow">
+      <div class="inputwrap">
+        <textarea id="message" aria-label="输入分析请求" placeholder="输入分析问题，或使用上方快捷入口填写公告…"></textarea>
+        <div class="actions">
+          <button id="full" class="secondary" type="button">获取完整报告</button>
+          <span class="status">同一会话可复用已解析年报</span>
+        </div>
+      </div>
+      <button id="send" class="send" type="button">发送 ↗</button>
+    </div>
+    <details class="sample-disclosure"><summary>需要演示输入？展开一条公开公告文字示例</summary><button class="quick-btn" type="button" data-template="demo">填入贵州茅台公告文字（仅预填，不发送）</button></details>
+    <div class="footer-note">提示：公告分析是事件初筛，需核对来源与审核状态；演示情景计算不等于正式投资估值或投资建议。</div>
+  </section>
+</div>
+<script>
+const messages = document.getElementById('messages');
+const message = document.getElementById('message');
+const fileInput = document.getElementById('file');
+const filechip = document.getElementById('filechip');
+const fileLabel = document.getElementById('fileLabel');
+const statusEl = document.getElementById('status');
+const progressEl = document.getElementById('progress');
+const sendBtn = document.getElementById('send');
+const fullBtn = document.getElementById('full');
+
+const sessionId = localStorage.getItem('finance_session_id') || crypto.randomUUID();
+localStorage.setItem('finance_session_id', sessionId);
+
+let busy = false;
+const ACTIVE_TASK_KEY = `finance_active_task_id_${sessionId}`;
+
+function addBubble(text, who='ai', report='') {
+  const row = document.createElement('div');
+  row.className = 'row ' + who;
+
+  const box = document.createElement('div');
+  box.className = 'message-body';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
+  box.appendChild(bubble);
+
+  if (report) {
+    const details = document.createElement('details');
+    const sum = document.createElement('summary');
+    sum.textContent = '查看完整 Markdown 报告';
+    const pre = document.createElement('div');
+    pre.className = 'report';
+    pre.textContent = report;
+    details.appendChild(sum);
+    details.appendChild(pre);
+    box.appendChild(details);
+  }
+
+  row.appendChild(box);
+  messages.appendChild(row);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+
+// The scenario panel is unlocked by a real Coze announcement-analysis reply.
+// The financial delta is NEVER calculated in the browser: /api/scenario calls
+// the existing server-side deterministic simplified DCF routine.
+function showScenarioOffer(replyText) {
+  if (!replyText || !replyText.includes('【公告事件分析】')) return;
+  const impact = (replyText.match(/^\s*影响变量\s*[：:]\s*([a-z_]+)/mi) || [,''])[1];
+  const isGrowth = ['revenue_growth', 'growth', 'sales_growth'].includes(impact);
+  const isOcf = ['margin', 'operating_cash_flow', 'cash_flow'].includes(impact);
+  if (!isGrowth && !isOcf) return;
+
+  const row = document.createElement('div');
+  row.className = 'row ai';
+  const card = document.createElement('section');
+  card.className = 'scenario-card';
+  // No AI-origin text is interpolated as HTML.
+  card.innerHTML = `
+    <span class="scenario-pill">隔离演示 · 非正式估值</span>
+    <h3>把公告信号转成可复核的DCF情景</h3>
+    <p>系统已识别事件和审核结果，但并未核准其估值影响。你可以自主设定一个假设，由网站后台重新计算；不会修改正式参数。</p>
+    <div class="scenario-controls">
+      <label class="scenario-label">人工模拟冲击</label>
+      <input class="scenario-delta" type="number" step="0.1" required aria-label="模拟冲击幅度" />
+      <span class="scenario-unit"></span>
+    </div>
+    <label class="scenario-consent"><input type="checkbox" class="scenario-confirm" />我确认该冲击值由我人工设置，不是公告自动推导的真实财务影响。</label>
+    <button type="button" class="scenario-run">运行后台DCF情景试算</button>
+    <div class="scenario-results" role="status" aria-live="polite" hidden></div>
+  `;
+  const deltaEl = card.querySelector('.scenario-delta');
+  const labelEl = card.querySelector('.scenario-label');
+  const unitEl = card.querySelector('.scenario-unit');
+  deltaEl.value = isGrowth ? '0.5' : '2.0';
+  deltaEl.min = isGrowth ? '-3' : '-15';
+  deltaEl.max = isGrowth ? '3' : '15';
+  labelEl.textContent = isGrowth ? '预测增长率增量' : '经营现金流代理值变化';
+  unitEl.textContent = isGrowth ? '个百分点（±3）' : '%（±15）';
+
+  const button = card.querySelector('.scenario-run');
+  const resultBox = card.querySelector('.scenario-results');
+  const confirmed = card.querySelector('.scenario-confirm');
+  button.addEventListener('click', async () => {
+    if (!confirmed.checked) {
+      resultBox.hidden = false;
+      resultBox.textContent = '请先确认模拟假设属于人工设定，再开始试算。';
+      return;
+    }
+    const delta = Number(deltaEl.value);
+    if (!deltaEl.value.trim() || !Number.isFinite(delta) || delta < Number(deltaEl.min) || delta > Number(deltaEl.max)) {
+      resultBox.hidden = false;
+      resultBox.textContent = `请输入 ${deltaEl.min} 至 ${deltaEl.max} 范围内的数字。`;
+      return;
+    }
+    button.disabled = true;
+    resultBox.hidden = false;
+    resultBox.textContent = '正在调用网站后台的确定性DCF计算程序…';
+    try {
+      const response = await fetch('/api/scenario', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          analysis_reply: replyText,
+          scenario_type: isGrowth ? 'growth_delta_pp' : 'ocf_delta_pct',
+          delta: delta
+        })
+      });
+      const data = await readJsonSafely(response);
+      if (!response.ok) throw new Error(data.error || '计算失败');
+      const c = data.calculation;
+      const num = value => Number(value).toLocaleString('zh-CN', {minimumFractionDigits:2,maximumFractionDigits:2});
+      resultBox.textContent = [
+        `公司：${data.company}（当前静态年报缓存）`,
+        `Reviewer：${data.event.reviewer_status}；正式估值参数：未修改`,
+        `财务基准审核：${data.financial_audit_status}（未获准用于正式估值）`,
+        '',
+        `基准模拟DCF：${num(c.base_per_share)} 元/股`,
+        `情景模拟DCF：${num(c.scenario_per_share)} 元/股`,
+        `变化：${c.delta_per_share >= 0 ? '+' : ''}${num(c.delta_per_share)} 元/股（${c.delta_percent >= 0 ? '+' : ''}${num(c.delta_percent)}%）`,
+        '',
+        `人工假设：${c.assumption_note}`,
+        `方法：经营现金流代理FCF的简化DCF；WACC ${c.wacc_percent}% / 终值增长率 ${c.terminal_growth_percent}%`,
+        '',
+        ...data.warnings.map(w => '⚠ ' + w)
+      ].join('\n');
+    } catch (err) {
+      resultBox.textContent = '暂时无法完成试算：' + err.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+  row.appendChild(card);
+  messages.appendChild(row);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function setBusy(on, text='') {
+  busy = on;
+  sendBtn.disabled = on;
+  fullBtn.disabled = on;
+  document.querySelectorAll('[data-template]').forEach(button => { button.disabled = on; });
+  fileInput.disabled = on;
+  fileLabel.classList.toggle('disabled', on);
+  statusEl.className = on ? 'status busy' : 'status';
+  statusEl.textContent = text;
+}
+
+function showProgress(text='') {
+  if (!text) {
+    progressEl.style.display = 'none';
+    progressEl.textContent = '';
+    return;
+  }
+  progressEl.style.display = 'block';
+  progressEl.textContent = text;
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+fileInput.addEventListener('change', () => {
+  const f = fileInput.files[0];
+  if (f) {
+    filechip.style.display = 'inline-block';
+    filechip.textContent = '📄 ' + f.name;
+  } else {
+    filechip.style.display = 'none';
+    filechip.textContent = '';
+  }
+});
+
+async function readJsonSafely(response) {
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`服务器返回非 JSON（HTTP ${response.status}）：${text.slice(0, 180)}`);
+  }
+}
+
+async function pollTask(taskId) {
+  const started = Date.now();
+  const maxWaitMs = 45 * 60 * 1000; // 45 分钟
+  let attempt = 0;
+
+  while (Date.now() - started < maxWaitMs) {
+    attempt += 1;
+    const elapsedMin = Math.floor((Date.now() - started) / 60000);
+    showProgress(`年报正在后台解析与分析中（已等待约 ${elapsedMin} 分钟）。请保持页面打开，不要重复上传。`);
+
+    const r = await fetch(`/api/task/${encodeURIComponent(taskId)}?session_id=${encodeURIComponent(sessionId)}`);
+    const data = await readJsonSafely(r);
+
+    if (!r.ok) {
+      throw new Error(data.error || '查询分析任务失败');
+    }
+
+    const status = String(data.status || '').toLowerCase();
+
+    if (status === 'completed') {
+      showProgress('');
+      return data;
+    }
+
+    if (status === 'failed' || status === 'timeout') {
+      const detail = typeof data.error === 'string' ? data.error : JSON.stringify(data.error || data);
+      throw new Error(`年报分析任务${status === 'timeout' ? '超时' : '失败'}：${detail}`);
+    }
+
+    // 前几分钟 5 秒一次，之后 10 秒一次，减少无意义请求
+    await sleep(attempt <= 36 ? 5000 : 10000);
+  }
+
+  throw new Error('等待分析结果超过 45 分钟。任务可能仍在后台运行，请稍后再试。');
+}
+
+async function send(fullReport=false) {
+  if (busy) return;
+
+  const text = (message.value || '').trim();
+  const f = fileInput.files[0];
+
+  if (!text && !f && !fullReport) return;
+
+  if (text) addBubble(text, 'user');
+  if (f) addBubble('已选择文件：' + f.name, 'user');
+
+  setBusy(true, f ? '正在提交年报分析任务…' : '分析中…');
+
+  const fd = new FormData();
+  fd.append('message', fullReport && !text ? '完整报告' : text);
+  fd.append('session_id', sessionId);
+  fd.append('request_full_report', fullReport ? 'true' : 'false');
+  if (f) fd.append('file', f);
+
+  try {
+    const r = await fetch('/api/chat', {method:'POST', body:fd});
+    const data = await readJsonSafely(r);
+
+    if (!r.ok) {
+      const extra = data.detail ? `\n${JSON.stringify(data.detail)}` : '';
+      throw new Error((data.error || '请求失败') + extra);
+    }
+
+    // 上传 PDF：后端返回异步 task_id，浏览器开始轮询。
+    if (data.async && data.task_id) {
+      addBubble(data.reply || '年报已上传，正在后台解析。', 'ai');
+      fileInput.value = '';
+      filechip.style.display = 'none';
+      filechip.textContent = '';
+      message.value = '';
+
+      setBusy(true, '年报解析中…');
+      localStorage.setItem(ACTIVE_TASK_KEY, data.task_id);
+      const finalData = await pollTask(data.task_id);
+      localStorage.removeItem(ACTIVE_TASK_KEY);
+
+      addBubble(
+        finalData.reply || '年报分析完成。',
+        'ai',
+        finalData.markdown_report || ''
+      );
+
+      statusEl.textContent = finalData.agent1_cached ? '年报解析完成并已缓存' : '年报分析完成';
+      return;
+    }
+
+    // 普通聊天/补参数：同步返回。
+    addBubble(data.reply || '已完成。', 'ai', data.markdown_report || '');
+    showScenarioOffer(data.reply || '');
+    if (data.cache_hit && data.auto_valuation) {
+      addBubble('⚠ 当前年报估值直接使用预存解析缓存和演示假设，未经过新财务门禁独立核准；不能视为正式投资估值。', 'ai');
+    }
+    message.value = '';
+    fileInput.value = '';
+    filechip.style.display = 'none';
+    filechip.textContent = '';
+    statusEl.textContent = data.agent1_cached ? '已复用年报缓存' : '';
+
+  } catch (e) {
+    showProgress('');
+    addBubble('请求失败：' + e.message, 'ai');
+    statusEl.textContent = '';
+  } finally {
+    setBusy(false, statusEl.textContent);
+  }
+}
+
+
+
+async function resumeExistingTask() {
+  const params = new URLSearchParams(window.location.search);
+  const taskFromUrl = (params.get('task_id') || '').trim();
+  const taskId = taskFromUrl || localStorage.getItem(ACTIVE_TASK_KEY);
+
+  if (!taskId) return;
+
+  // URL 里的 task_id 只用于恢复展示，不会创建新任务、不会重新上传 PDF。
+  localStorage.setItem(ACTIVE_TASK_KEY, taskId);
+  setBusy(true, '正在恢复年报分析结果…');
+  showProgress('正在读取已存在的后台任务，不会重新解析 PDF。');
+
+  try {
+    const finalData = await pollTask(taskId);
+    localStorage.removeItem(ACTIVE_TASK_KEY);
+    showProgress('');
+    addBubble(
+      finalData.reply || '年报分析完成。',
+      'ai',
+      finalData.markdown_report || ''
+    );
+    statusEl.textContent = finalData.agent1_cached ? '年报解析完成并已缓存' : '年报分析完成';
+
+    if (taskFromUrl) {
+      params.delete('task_id');
+      const newQuery = params.toString();
+      history.replaceState(null, '', window.location.pathname + (newQuery ? `?${newQuery}` : ''));
+    }
+  } catch (e) {
+    showProgress('');
+    addBubble('恢复任务失败：' + e.message, 'ai');
+    statusEl.textContent = '';
+  } finally {
+    setBusy(false, statusEl.textContent);
+  }
+}
+
+
+// 快捷入口仅填写输入框；用户点击“发送”后才请求后端。
+const inputTemplates = {
+  annual: '帮我分析这家公司的年报',
+  event: '/公告\n公司：\n日期：\n来源：\n链接：\n正文：',
+  demo: "/公告\n公司：贵州茅台酒股份有限公司\n日期：2023-11-01\n来源：贵州茅台酒股份有限公司《重大事项公告》（临2023-032）\n链接：https://www.moutai.com.cn/maotaigf/fileDir/resource/cms/article/408428/570257/202311011633232180.pdf\n正文：经研究决定，自2023年11月1日起上调本公司53%vol贵州茅台酒（飞天、五星）出厂价格，平均上调幅度约为20%。此次价格调整不涉及本公司产品的市场指导价格。"
+};
+
+document.querySelectorAll('[data-template]').forEach(button => {
+  button.addEventListener('click', () => {
+    if (busy) return;
+    const kind = button.dataset.template;
+    const draft = inputTemplates[kind];
+    if (!draft) return;
+    if (message.value.trim() && message.value !== draft &&
+        !window.confirm('替换输入框里已有的内容吗？')) return;
+    message.value = draft;
+    message.focus();
+    if (kind === 'event') {
+      const start = draft.indexOf('公司：') + '公司：'.length;
+      message.setSelectionRange(start, start);
+    } else {
+      message.setSelectionRange(message.value.length, message.value.length);
+    }
+    message.scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+});
+
+sendBtn.addEventListener('click', () => send(false));
+fullBtn.addEventListener('click', () => send(true));
+
+resumeExistingTask();
+
+message.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    send(false);
+  }
+});
+</script>
+</body>
+</html>

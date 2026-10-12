@@ -82,6 +82,13 @@
     .scenario-run{background:#235bb9;color:#fff;border-radius:10px;padding:10px 16px;font-size:13px}
     .scenario-run:disabled{opacity:.5;cursor:not-allowed}
     .scenario-results{margin-top:12px;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;padding:13px;background:#f1f6fc;border-radius:10px;color:#213952}
+    .announce-hint{display:none;margin:0 0 10px;padding:12px 14px;border:1px solid #d3e3f8;background:#f4f8fe;border-radius:12px;color:#31577f;font-size:12px;line-height:1.8}
+    .announce-hint.active{display:block}
+    .announce-hint strong{display:block;color:#1b477c;font-size:13px}
+    .announce-hint small{font-size:11px;color:#607894}
+    .quick-btn.selected{background:#235bb9;color:#fff;border-color:#235bb9}
+    .mode-tag{font-size:11px;font-weight:750;color:#235bb9;background:#eaf2ff;border-radius:7px;padding:4px 8px;display:none}
+    .mode-tag.active{display:inline-block}
     .sample-disclosure{margin:8px 0 2px;border:0;padding:0;font-size:12px}
     .sample-disclosure summary{color:#6e7b8e;font-size:12px}
     .sample-disclosure button{margin:9px 0 1px}
@@ -95,6 +102,59 @@
        .info-strip{padding:8px 14px;font-size:11px}.info-note{display:none}
     }
     @media(max-width:390px){.sub{display:none}.brand{gap:8px}.nav-link{padding:7px}.nav-links .active{display:none}}
+
+    /* 事件审核面板：对模型输出做结构化呈现，但不额外宣称来源已核实 */
+    .review-panel{width:min(100%,840px);border:1px solid #d9e3f1;border-radius:17px;background:#fff;padding:18px 19px;margin-top:1px;box-shadow:0 5px 18px rgba(22,48,80,.045)}
+    .review-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .review-eyebrow{font-size:10px;letter-spacing:.09em;font-weight:850;color:#557190;margin:0 0 5px}
+    .review-heading{font-size:17px;font-weight:850;color:#183554;line-height:1.45;margin:0}
+    .review-state{border-radius:999px;padding:5px 10px;font-size:11px;font-weight:800;background:#fff3da;color:#805817;border:1px solid #f0deb1}
+    .review-state.approved{background:#e9f8ee;color:#196646;border-color:#c7ead3}
+    .review-state.blocked{background:#ffeff0;color:#9b3036;border-color:#f3d3d7}
+    .review-metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:15px 0 11px}
+    .review-metric{padding:11px 12px;border:1px solid #e5ebf3;border-radius:11px;background:#f9fbfd;min-width:0}
+    .review-label{display:block;color:#7b8a9d;font-size:11px;line-height:1.55;margin-bottom:5px}
+    .review-value{display:block;font-weight:790;font-size:13px;color:#263e5d;overflow-wrap:anywhere;line-height:1.55}
+    .review-trace{border-left:3px solid #5584c1;padding:9px 12px;background:#f3f7fd;border-radius:0 9px 9px 0;margin:13px 0;overflow-wrap:anywhere}
+    .review-trace-title{font-size:11px;color:#365879;font-weight:800;margin-bottom:4px}
+    .review-trace-text{font-size:12px;line-height:1.8;color:#4e6077;white-space:pre-wrap}
+    .review-foot{display:flex;gap:9px;align-items:flex-start;background:#fff7e9;border:1px solid #f1e4c9;border-radius:10px;padding:10px 11px;font-size:12px;color:#735d38;line-height:1.7}
+    .review-foot strong{color:#77501c}
+    .review-explain{font-size:12px;color:#64778e;margin-top:9px;line-height:1.8}
+    .review-unavailable{font-size:12px;color:#54708b;border-top:1px dashed #d8e2ef;margin-top:12px;padding-top:11px;line-height:1.8}
+    .scenario-results{white-space:normal;padding:14px 15px}
+    .scenario-kicker{font-size:11px;font-weight:800;color:#4b6889;margin-bottom:9px}
+    .scenario-figures{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin:10px 0 13px}
+    .scenario-figure{border:1px solid #dce6f1;border-radius:11px;background:#fff;padding:12px 11px;min-width:0}
+    .scenario-figure .name{font-size:11px;color:#6a7b91;font-weight:720}
+    .scenario-figure .val{margin-top:5px;font-size:20px;line-height:1.3;color:#1b3a5a;font-weight:850;overflow-wrap:anywhere;letter-spacing:-.5px}
+    .scenario-figure .unit{font-size:10px;color:#8190a0;margin-top:4px}
+    .scenario-figure.delta.positive .val{color:#186e55}
+    .scenario-figure.delta.negative .val{color:#a34a45}
+    .scenario-bar-visual{border-radius:12px;background:#fff;border:1px solid #e1e9f3;padding:13px 13px 12px;margin:10px 0}
+    .scenario-chart-title{font-size:12px;font-weight:820;color:#264565;margin-bottom:12px}
+    .scenario-chart-row{display:grid;grid-template-columns:72px 1fr 84px;gap:11px;align-items:center;margin:10px 0}
+    .scenario-chart-label{font-size:11px;font-weight:720;color:#5b728c}
+    .scenario-chart-track{height:17px;background:#eef2f8;position:relative;border-radius:5px;overflow:hidden}
+    .scenario-chart-fill{height:100%;min-width:1px;border-radius:5px;transition:width .25s ease;background:#6184b8}
+    .scenario-chart-fill.scenario{background:#2875bd}
+    .scenario-chart-fill.scenario.down{background:#c27762}
+    .scenario-chart-val{font-size:11px;font-weight:780;text-align:right;font-variant-numeric:tabular-nums;color:#29496e}
+    .scenario-chart-caption{font-size:11px;color:#8191a4;line-height:1.6;margin-top:10px}
+    .scenario-summary{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;padding:11px;border-radius:10px;background:#edf5ff}
+    .scenario-summary .left{font-size:12px;color:#45617e}
+    .scenario-summary .right{font-size:12px;color:#1c5d9a;font-weight:850}
+    .scenario-disclosure{margin-top:12px;padding-top:10px;border-top:1px solid #dee8f3;font-size:11px;line-height:1.8;color:#687b91}
+    .scenario-disclosure p{font-size:11px;line-height:1.65;color:#718298;margin:4px 0}
+    .scenario-disclosure ul{margin:5px 0 0 0;padding-left:17px}
+    .scenario-disclosure li{margin-top:4px;overflow-wrap:anywhere}
+    @media(max-width:760px){
+      .review-panel{padding:14px}
+      .scenario-figures{grid-template-columns:1fr 1fr}
+      .scenario-figure.delta{grid-column:span 2}
+      .scenario-chart-row{grid-template-columns:58px 1fr 73px;gap:6px}
+      .scenario-results{padding:11px}
+    }
 </style>
 </head>
 <body>
@@ -120,7 +180,7 @@
     <span class="quickbar-label">快速开始</span>
     <button class="quick-btn primary" type="button" data-template="annual">📄 年报分析</button>
     <button class="quick-btn" type="button" data-template="event">📢 公告分析</button>
-    <span class="quick-tip">点击仅填入输入框，不自动发送</span>
+    <span class="quick-tip">粘贴完整公告即可，无需逐项填写</span>
   </div>
   <main id="messages" aria-label="分析对话">
     <section class="welcome" aria-label="产品介绍">
@@ -133,11 +193,17 @@
         <div class="feature"><strong>03 / 可信审核机制</strong><span>未经审核的信息保持隔离，不直接修改正式估值参数。</span></div>
       </div>
     </section>
-    <div class="row ai"><div class="message-body"><div class="bubble">你好！你可以点击上方「年报分析」或「公告分析」，也可以直接在下方输入问题。公告分析成功后，可在下方开启由用户授权假设的隔离情景试算；试算不会修改正式估值。</div></div></div>
+    <div class="row ai"><div class="message-body"><div class="bubble">你好！你可以点击上方「年报分析」或「公告分析」，也可以直接在下方输入问题。公告只需粘贴原文，不必填写复杂表格；审核后可开启人工授权的隔离情景试算；试算不会修改正式估值。</div></div></div>
   </main>
   <section class="composer" aria-label="发送分析请求">
     <div id="progress" class="progress" role="status" aria-live="polite"></div>
+    <div class="announce-hint" id="announceHint" role="note">
+      <strong>直接粘贴公告全文，然后点击「发送」</strong>
+      不用手动填写公司、日期、来源、链接，也不用自己总结事件。建议连同公告标题、发布日期和落款一起复制，识别更可靠。<br>
+      <small>系统仅从粘贴内容中提取信息；缺少来源会标注「待核验」。目前尚不支持只贴网址或上传公告PDF直接解析。</small>
+    </div>
     <div class="attachline">
+      <span id="modeTag" class="mode-tag" aria-live="polite">公告原文模式</span>
       <label id="fileLabel" class="filebtn" for="file">📎 上传年报 PDF</label>
       <input id="file" type="file" accept="application/pdf,.pdf" />
       <span id="filechip" class="filechip"></span>
@@ -145,7 +211,7 @@
     </div>
     <div class="inputrow">
       <div class="inputwrap">
-        <textarea id="message" aria-label="输入分析请求" placeholder="输入分析问题，或使用上方快捷入口填写公告…"></textarea>
+        <textarea id="message" aria-label="输入分析请求" placeholder="输入问题，或者点击「公告分析」后粘贴公告全文…"></textarea>
         <div class="actions">
           <button id="full" class="secondary" type="button">获取完整报告</button>
           <span class="status">同一会话可复用已解析年报</span>
@@ -153,7 +219,7 @@
       </div>
       <button id="send" class="send" type="button">发送 ↗</button>
     </div>
-    <details class="sample-disclosure"><summary>需要演示输入？展开一条公开公告文字示例</summary><button class="quick-btn" type="button" data-template="demo">填入贵州茅台公告文字（仅预填，不发送）</button></details>
+    <details class="sample-disclosure"><summary>需要体验？可使用一段公开公告原文示例</summary><button class="quick-btn" type="button" data-template="demo">填入公告原文示例（不会自动发送）</button></details>
     <div class="footer-note">提示：公告分析是事件初筛，需核对来源与审核状态；演示情景计算不等于正式投资估值或投资建议。</div>
   </section>
 </div>
@@ -167,6 +233,9 @@ const statusEl = document.getElementById('status');
 const progressEl = document.getElementById('progress');
 const sendBtn = document.getElementById('send');
 const fullBtn = document.getElementById('full');
+const announceHint = document.getElementById('announceHint');
+const modeTag = document.getElementById('modeTag');
+let analysisMode = 'general';
 
 const sessionId = localStorage.getItem('finance_session_id') || crypto.randomUUID();
 localStorage.setItem('finance_session_id', sessionId);
@@ -202,6 +271,157 @@ function addBubble(text, who='ai', report='') {
   messages.scrollTop = messages.scrollHeight;
 }
 
+
+
+// 将已经返回的公告分析文字整理成可读的审核面板。
+// 字段均来自当前模型回复；“原文证据”仍需独立核验，不代表真实世界已验证。
+function announcementField(replyText, key) {
+  const lines = String(replyText || '').split(/\r?\n/);
+  const pattern = new RegExp('^\\s*' + key + '\\s*[：:]\\s*(.*?)\\s*$');
+  for (const line of lines) {
+    const match = line.match(pattern);
+    if (match) return match[1].trim().slice(0, 1600);
+  }
+  return '';
+}
+function labeledNode(tag, className, text) {
+  const node = document.createElement(tag);
+  node.className = className;
+  node.textContent = text;
+  return node;
+}
+function renderReviewPanel(replyText) {
+  if (!String(replyText || '').includes('【公告事件分析】')) return;
+  const event = announcementField(replyText, '事件') || '未能提取完整事件';
+  const direction = announcementField(replyText, '方向') || '未确认';
+  const variable = announcementField(replyText, '影响变量') || '尚无明确映射';
+  const status = announcementField(replyText, '审核状态') || 'unknown';
+  const company = announcementField(replyText, '公司') || '公司待识别';
+  const evidence = announcementField(replyText, '原文证据') || '回复未提供可核验原文片段';
+  const reason = announcementField(replyText, '审核说明') || '请以原始公告及审核流程为准';
+  const run = document.createElement('div');
+  run.className = 'row ai';
+  const card = document.createElement('section');
+  card.className = 'review-panel';
+  card.setAttribute('aria-label', '公告可信审核结果');
+
+  const top = labeledNode('div', 'review-top', '');
+  const headingWrap = document.createElement('div');
+  headingWrap.appendChild(labeledNode('div', 'review-eyebrow', 'EVENT SIGNAL · EVIDENCE REVIEW'));
+  headingWrap.appendChild(labeledNode('h3', 'review-heading', '公告事件 · 可信审核')); 
+  top.appendChild(headingWrap);
+  const stateNames = {needs_review:'需人工复核', blocked:'审核未通过', approved:'已通过当前规则', pass:'已通过当前规则'};
+  const state = labeledNode('span', 'review-state', (stateNames[status] || '审核状态待确认') + ' · ' + status);
+  if (status === 'approved' || status === 'pass') state.classList.add('approved');
+  if (status === 'blocked') state.classList.add('blocked');
+  top.appendChild(state);
+  card.appendChild(top);
+
+  const metrics = document.createElement('div');
+  metrics.className = 'review-metrics';
+  [['公司',company],['事件方向',direction],['识别事件',event],['潜在影响变量',variable]].forEach(([name,val])=>{
+    const m = document.createElement('div');
+    m.className = 'review-metric';
+    m.appendChild(labeledNode('span','review-label',name));
+    m.appendChild(labeledNode('strong','review-value',val));
+    metrics.appendChild(m);
+  });
+  card.appendChild(metrics);
+
+  const trace = document.createElement('div');
+  trace.className = 'review-trace';
+  trace.appendChild(labeledNode('div','review-trace-title','模型提取的公告文字片段 · 来源未独立核验'));
+  trace.appendChild(labeledNode('div','review-trace-text',evidence));
+  card.appendChild(trace);
+  card.appendChild(labeledNode('p','review-explain','审核说明：'+reason));
+  const foot = document.createElement('div');
+  foot.className = 'review-foot';
+  foot.appendChild(labeledNode('span','', '🔒'));
+  foot.appendChild(labeledNode('span','', '正式估值参数不因这条公告分析自动修改。模型识别的影响方向不等于财务数据核验通过。'));
+  card.appendChild(foot);
+  if (!['revenue_growth','growth','sales_growth','margin','operating_cash_flow','cash_flow'].includes(variable)) {
+    card.appendChild(labeledNode('div','review-unavailable','当前影响变量「'+variable+'」没有经过验证的DCF情景映射，暂不提供本事件的量化试算；不会借用其他公司的财务数据。'));
+  }
+  run.appendChild(card);
+  messages.appendChild(run);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function scenarioNumeric(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) throw new Error('计算服务返回了无效的数字');
+  return number;
+}
+function scenarioText(value, digits=2) {
+  return scenarioNumeric(value).toLocaleString('zh-CN', {minimumFractionDigits:digits, maximumFractionDigits:digits});
+}
+function createScenarioResult(resultBox, data) {
+  const c = data.calculation || {};
+  const base = scenarioNumeric(c.base_per_share);
+  const after = scenarioNumeric(c.scenario_per_share);
+  const change = scenarioNumeric(c.delta_per_share);
+  const changePct = scenarioNumeric(c.delta_percent);
+  if (base <= 0 || after <= 0) throw new Error('计算结果无效，无法生成对比图');
+  resultBox.replaceChildren();
+  resultBox.appendChild(labeledNode('div','scenario-kicker','DETERMINISTIC DCF · 基于实际后台返回值绘制'));
+
+  const figures = document.createElement('div');
+  figures.className = 'scenario-figures';
+  [
+    ['基准隔离试算', scenarioText(base), '元/股', ''],
+    ['当前人工情景', scenarioText(after), '元/股', ''],
+    ['相对基准变化', (change >= 0 ? '+' : '') + scenarioText(change), '元/股 · '+(changePct >= 0 ? '+' : '')+scenarioText(changePct)+'%', 'delta '+(change >= 0 ? 'positive':'negative')]
+  ].forEach(([name,val,unit,cls])=>{
+    const box = document.createElement('div');
+    box.className = 'scenario-figure '+cls;
+    box.appendChild(labeledNode('div','name',name));
+    box.appendChild(labeledNode('div','val',val));
+    box.appendChild(labeledNode('div','unit',unit));
+    figures.appendChild(box);
+  });
+  resultBox.appendChild(figures);
+
+  // 零基准横条由本次 /api/scenario 数值驱动，不含写死的茅台价格。
+  const chart = document.createElement('div');
+  chart.className = 'scenario-bar-visual';
+  chart.setAttribute('role','img');
+  chart.setAttribute('aria-label',`基准模拟DCF ${scenarioText(base)}元每股，情景模拟DCF ${scenarioText(after)}元每股，变化${scenarioText(changePct)}%`);
+  chart.appendChild(labeledNode('div','scenario-chart-title','基准与当前情景 · 估值对比'));
+  const maxVal = Math.max(base,after) * 1.08;
+  [['基准',base,false],['情景',after,true]].forEach(([label,value,isCurrent])=>{
+    const line = document.createElement('div');
+    line.className = 'scenario-chart-row';
+    line.appendChild(labeledNode('span','scenario-chart-label',label));
+    const track = document.createElement('div');
+    track.className = 'scenario-chart-track';
+    const bar = document.createElement('div');
+    bar.className = 'scenario-chart-fill'+(isCurrent ? ' scenario' : '')+(isCurrent && value < base ? ' down' : '');
+    bar.style.width = Math.max(0, Math.min(100, (value / maxVal) * 100)).toFixed(3)+'%';
+    track.appendChild(bar);
+    line.appendChild(track);
+    line.appendChild(labeledNode('span','scenario-chart-val',scenarioText(value)));
+    chart.appendChild(line);
+  });
+  chart.appendChild(labeledNode('div','scenario-chart-caption','图表比例以零为起点；每次试算均使用本次后台返回的计算值，不使用固定案例图片。'));
+  resultBox.appendChild(chart);
+
+  const summary = document.createElement('div');
+  summary.className = 'scenario-summary';
+  summary.appendChild(labeledNode('div','left','审核状态 '+String(data.event?.reviewer_status || 'unknown')+' · 财务基准 '+String(data.financial_audit_status || 'unknown')));
+  summary.appendChild(labeledNode('div','right','🔒 正式估值未修改'));
+  resultBox.appendChild(summary);
+  const disclosure = document.createElement('div');
+  disclosure.className = 'scenario-disclosure';
+  disclosure.appendChild(labeledNode('div','', '本次计算使用的假设：'+String(c.assumption_note || '未提供')));
+  disclosure.appendChild(labeledNode('div','', '方法：经营现金流作为FCF代理的简化DCF · WACC '+scenarioText(c.wacc_percent)+'% · 永续增长率 '+scenarioText(c.terminal_growth_percent)+'%'));
+  const warnings = Array.isArray(data.warnings) ? data.warnings : [];
+  if (warnings.length) {
+    const list = document.createElement('ul');
+    for (const text of warnings) list.appendChild(labeledNode('li','',String(text)));
+    disclosure.appendChild(list);
+  }
+  resultBox.appendChild(disclosure);
+}
 
 // The scenario panel is unlocked by a real Coze announcement-analysis reply.
 // The financial delta is NEVER calculated in the browser: /api/scenario calls
@@ -270,22 +490,7 @@ function showScenarioOffer(replyText) {
       });
       const data = await readJsonSafely(response);
       if (!response.ok) throw new Error(data.error || '计算失败');
-      const c = data.calculation;
-      const num = value => Number(value).toLocaleString('zh-CN', {minimumFractionDigits:2,maximumFractionDigits:2});
-      resultBox.textContent = [
-        `公司：${data.company}（当前静态年报缓存）`,
-        `Reviewer：${data.event.reviewer_status}；正式估值参数：未修改`,
-        `财务基准审核：${data.financial_audit_status}（未获准用于正式估值）`,
-        '',
-        `基准模拟DCF：${num(c.base_per_share)} 元/股`,
-        `情景模拟DCF：${num(c.scenario_per_share)} 元/股`,
-        `变化：${c.delta_per_share >= 0 ? '+' : ''}${num(c.delta_per_share)} 元/股（${c.delta_percent >= 0 ? '+' : ''}${num(c.delta_percent)}%）`,
-        '',
-        `人工假设：${c.assumption_note}`,
-        `方法：经营现金流代理FCF的简化DCF；WACC ${c.wacc_percent}% / 终值增长率 ${c.terminal_growth_percent}%`,
-        '',
-        ...data.warnings.map(w => '⚠ ' + w)
-      ].join('\n');
+      createScenarioResult(resultBox, data);
     } catch (err) {
       resultBox.textContent = '暂时无法完成试算：' + err.message;
     } finally {
@@ -302,7 +507,7 @@ function setBusy(on, text='') {
   sendBtn.disabled = on;
   fullBtn.disabled = on;
   document.querySelectorAll('[data-template]').forEach(button => { button.disabled = on; });
-  fileInput.disabled = on;
+  fileInput.disabled = on || analysisMode === 'announcement';
   fileLabel.classList.toggle('disabled', on);
   statusEl.className = on ? 'status busy' : 'status';
   statusEl.textContent = text;
@@ -378,6 +583,83 @@ async function pollTask(taskId) {
   throw new Error('等待分析结果超过 45 分钟。任务可能仍在后台运行，请稍后再试。');
 }
 
+// 纯文本公告输入适配：不调用模型、不联网抓取、绝不猜测缺失的公司。
+// 原文与用户提供的元数据保留在「正文」中；字段自动提取仅用于现有Graph路由。
+function normalizeDate(dateText) {
+  const m = String(dateText || '').match(/(?:20\d{2})\s*(?:年|[-/.])\s*(?:1[0-2]|0?[1-9])\s*(?:月|[-/.])\s*(?:3[01]|[12]\d|0?[1-9])\s*日?(?!\d)/);
+  if (!m) return '';
+  const parts = m[0].match(/\d+/g);
+  if (!parts || parts.length < 3) return '';
+  const year = Number(parts[0]), month = Number(parts[1]), day = Number(parts[2]);
+  const d = new Date(Date.UTC(year, month - 1, day));
+  if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month - 1 || d.getUTCDate() !== day) return '';
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+function extractAnnouncementMetadata(raw) {
+  const text = raw.trim();
+  const label = text.match(/(?:^|\n)\s*(?:公司(?:名称)?|发行人)\s*[：:]\s*([^\n\r]{2,72})/m);
+  let company = '';
+  if (label) {
+    company = label[1].split(/[，。；;、]/)[0].trim();
+  } else {
+    // 优先从公告前几行寻找法律主体的完整名称，避免抓取正文中其他公司的名称。
+    const heading = text.split(/\r?\n/).slice(0, 8).join('\n').slice(0, 900);
+    const name = heading.match(/([\u4e00-\u9fa5A-Za-z0-9·（）()]{2,45}?(?:股份有限公司|有限责任公司|有限公司))/);
+    if (name) company = name[1];
+    else {
+      const shortName = heading.match(/(?:^|\n)\s*(?:证券简称|股票简称)\s*[：:]\s*([^\n\r\s，。,]{2,25})/);
+      if (shortName) company = shortName[1];
+    }
+  }
+  // 拒绝明显过长/无效名称，避免将正文句子误当作发布主体。
+  if (company.length > 55 || /^未(提供|知|识别)/.test(company)) company = '';
+  const explicitDate = text.match(/(?:^|\n)\s*(?:公告日期|发布日期|日期|披露日期)\s*[：:]\s*([^\n\r]+)/m);
+  let date = normalizeDate(explicitDate ? explicitDate[1] : '');
+  if (!date) {
+    const dates = text.match(/20\d{2}\s*(?:年|[-/.])\s*(?:1[0-2]|0?[1-9])\s*(?:月|[-/.])\s*(?:3[01]|[12]\d|0?[1-9])\s*日?(?!\d)/g) || [];
+    // 多个不同日期时，不能擅自判断哪一个是公告发布日期。
+    const unique = Array.from(new Set(dates.map(normalizeDate).filter(Boolean)));
+    if (unique.length === 1) date = unique[0];
+  }
+  const link = (text.match(/https?:\/\/[^\s<>"“”]+/i) || [''])[0].replace(/[，。；;,）)]+$/, '');
+  const source = (text.match(/(?:^|\n)\s*来源\s*[：:]\s*([^\n\r]+)/m) || [,''])[1].trim();
+  return {company, date, link, source};
+}
+function prepareAnnouncement(text) {
+  // 兼容此前已验证的完整结构化指令，避免破坏旧案例。
+  if (/^\/公告\s*\n\s*公司\s*[：:]/.test(text)) return {message: text, raw: false};
+  const raw = text.replace(/^\/公告\s*\n?/, '').trim();
+  if (/^https?:\/\/\S+\s*$/.test(raw)) return {error:'目前还不能自动读取网页链接。请打开公告页面，复制公告正文后粘贴到输入框。'};
+  if (raw.length < 30) return {error:'请粘贴完整公告原文（至少30个字），不需要自行总结。'};
+  if (raw.length > 15000) return {error:'公告过长。请粘贴有标题、日期和正文的主要内容（不超过15000字），暂不要上传整份长报告。'};
+  const info = extractAnnouncementMetadata(raw);
+  if (!info.company) return {error:'未能从原文识别发布公司。请复制包含公司名称的公告抬头，或在原文第一行加一行「公司：某某股份有限公司」，其他字段无需填写。'};
+  // 缺失的日期、URL、来源都显式标记待核验，不杜撰发布事实。
+  const result = ['/公告',
+    `公司：${info.company}`,
+    `日期：${info.date || '未提供（待核验）'}`,
+    `来源：${info.source ? '用户提供：'+info.source+'（未独立核验）' : '用户粘贴的公告文字（来源未核验）'}`,
+    `链接：${info.link || '未提供（待核验）'}`,
+    `正文：${raw}`].join('\n');
+  return {message: result, raw: true, info};
+}
+function setAnalysisMode(mode) {
+  analysisMode = mode;
+  fileLabel.style.display = mode === 'announcement' ? 'none' : '';
+  fileInput.disabled = mode === 'announcement' || busy;
+  announceHint.classList.toggle('active', mode === 'announcement');
+  modeTag.classList.toggle('active', mode === 'announcement');
+  const annualBtn = document.querySelector('[data-template="annual"]');
+  const eventBtn = document.querySelector('[data-template="event"]');
+  annualBtn.classList.toggle('selected', mode === 'annual');
+  eventBtn.classList.toggle('selected', mode === 'announcement');
+  if (mode === 'announcement') {
+    message.placeholder = '粘贴公告全文：标题、正文、日期、落款等原样复制即可，无需分栏…';
+  } else {
+    message.placeholder = '输入分析问题，或上传一份上市公司年报PDF…';
+  }
+}
+
 async function send(fullReport=false) {
   if (busy) return;
 
@@ -385,6 +667,20 @@ async function send(fullReport=false) {
   const f = fileInput.files[0];
 
   if (!text && !f && !fullReport) return;
+  if (analysisMode === 'announcement' && f) {
+    addBubble('公告模式目前不支持直接上传PDF。请粘贴公告文字；上传年报请先切换到「年报分析」。', 'ai');
+    return;
+  }
+  let actualMessage = text;
+  if (analysisMode === 'announcement' && text && !fullReport) {
+    const prepared = prepareAnnouncement(text);
+    if (prepared.error) {
+      addBubble(prepared.error, 'ai');
+      return; // 不发送请求、不浪费Coze模型调用。
+    }
+    actualMessage = prepared.message;
+  }
+
 
   if (text) addBubble(text, 'user');
   if (f) addBubble('已选择文件：' + f.name, 'user');
@@ -392,7 +688,7 @@ async function send(fullReport=false) {
   setBusy(true, f ? '正在提交年报分析任务…' : '分析中…');
 
   const fd = new FormData();
-  fd.append('message', fullReport && !text ? '完整报告' : text);
+  fd.append('message', fullReport && !text ? '完整报告' : actualMessage);
   fd.append('session_id', sessionId);
   fd.append('request_full_report', fullReport ? 'true' : 'false');
   if (f) fd.append('file', f);
@@ -431,6 +727,7 @@ async function send(fullReport=false) {
 
     // 普通聊天/补参数：同步返回。
     addBubble(data.reply || '已完成。', 'ai', data.markdown_report || '');
+    renderReviewPanel(data.reply || '');
     showScenarioOffer(data.reply || '');
     if (data.cache_hit && data.auto_valuation) {
       addBubble('⚠ 当前年报估值直接使用预存解析缓存和演示假设，未经过新财务门禁独立核准；不能视为正式投资估值。', 'ai');
@@ -493,26 +790,29 @@ async function resumeExistingTask() {
 // 快捷入口仅填写输入框；用户点击“发送”后才请求后端。
 const inputTemplates = {
   annual: '帮我分析这家公司的年报',
-  event: '/公告\n公司：\n日期：\n来源：\n链接：\n正文：',
-  demo: "/公告\n公司：贵州茅台酒股份有限公司\n日期：2023-11-01\n来源：贵州茅台酒股份有限公司《重大事项公告》（临2023-032）\n链接：https://www.moutai.com.cn/maotaigf/fileDir/resource/cms/article/408428/570257/202311011633232180.pdf\n正文：经研究决定，自2023年11月1日起上调本公司53%vol贵州茅台酒（飞天、五星）出厂价格，平均上调幅度约为20%。此次价格调整不涉及本公司产品的市场指导价格。"
+  demo: '贵州茅台酒股份有限公司\n重大事项公告（临2023-032）\n公告日期：2023-11-01\n公告链接：https://www.moutai.com.cn/maotaigf/fileDir/resource/cms/article/408428/570257/202311011633232180.pdf\n经研究决定，自2023年11月1日起上调本公司53%vol贵州茅台酒（飞天、五星）出厂价格，平均上调幅度约为20%。此次价格调整不涉及本公司产品的市场指导价格。'
 };
 
 document.querySelectorAll('[data-template]').forEach(button => {
   button.addEventListener('click', () => {
     if (busy) return;
     const kind = button.dataset.template;
+    if (kind === 'event') {
+      // 仅切换模式，不填复杂模板；保留用户已经粘贴的原文。
+      if (message.value.trim() === inputTemplates.annual) message.value = '';
+      setAnalysisMode('announcement');
+      message.focus();
+      message.scrollIntoView({behavior:'smooth',block:'nearest'});
+      return;
+    }
     const draft = inputTemplates[kind];
     if (!draft) return;
     if (message.value.trim() && message.value !== draft &&
         !window.confirm('替换输入框里已有的内容吗？')) return;
+    setAnalysisMode(kind === 'annual' ? 'annual' : 'announcement');
     message.value = draft;
     message.focus();
-    if (kind === 'event') {
-      const start = draft.indexOf('公司：') + '公司：'.length;
-      message.setSelectionRange(start, start);
-    } else {
-      message.setSelectionRange(message.value.length, message.value.length);
-    }
+    message.setSelectionRange(message.value.length, message.value.length);
     message.scrollIntoView({behavior:'smooth',block:'nearest'});
   });
 });

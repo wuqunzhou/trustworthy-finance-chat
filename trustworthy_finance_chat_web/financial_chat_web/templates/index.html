@@ -155,6 +155,22 @@
       .scenario-chart-row{grid-template-columns:58px 1fr 73px;gap:6px}
       .scenario-results{padding:11px}
     }
+
+    /* 价格事件的证据约束传导分析：仅在服务端计算，不提供自动估值。 */
+    .transmission-card{width:min(100%,840px);border:1px solid #d5e2ef;border-radius:17px;background:#fff;padding:18px 19px;box-shadow:0 5px 16px rgba(28,56,85,.06);font-size:13px;line-height:1.7}
+    .transmission-card h3{font-size:17px;color:#173e64;margin:0 0 6px}
+    .transmission-tag{font-size:11px;background:#eaf2fc;color:#2c5a92;border-radius:99px;padding:4px 8px;display:inline-block;margin-bottom:8px;font-weight:800}
+    .transmission-chain{font-weight:800;color:#325472;background:#f4f8fe;padding:11px;border-radius:9px;margin:11px 0}
+    .transmission-missing{font-size:12px;padding:9px 12px;background:#fff9ed;border:1px solid #f0e3c6;border-radius:10px;color:#6e5b3c;margin:9px 0}
+    .transmission-form{border-top:1px solid #e5eaf1;margin-top:13px;padding-top:12px}
+    .transmission-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:10px 0}
+    .transmission-fields label{font-size:11px;color:#49627d;display:flex;flex-direction:column;gap:5px;font-weight:750}
+    .transmission-fields input{font-size:13px;border:1px solid #c5d4e5;border-radius:8px;padding:8px;min-width:0}
+    .transmission-ack{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#5d7085;margin:10px 0}
+    .transmission-run{font-size:12px;background:#235bb9;color:#fff;padding:9px 12px;border-radius:8px}
+    .transmission-output{font-size:13px;background:#f3f8fc;padding:11px;border-radius:9px;margin:11px 0;white-space:pre-wrap;line-height:1.8}
+    .transmission-note{font-size:11px;color:#74859a;margin:8px 0 0;line-height:1.7}
+    @media(max-width:760px){.transmission-card{padding:13px}.transmission-fields{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -345,6 +361,91 @@ function renderReviewPanel(replyText) {
   run.appendChild(card);
   messages.appendChild(run);
   messages.scrollTop = messages.scrollHeight;
+}
+
+
+// 经济传导：自动给出证据缺口；只有用户明确给出必要的未验证假设才请求数值区间。
+// 本模块不会访问或修改财务缓存，也不把收入变化硬映射成DCF目标价。
+function renderEconomicTransmission(replyText) {
+  if (!String(replyText || '').includes('【公告事件分析】')) return;
+  const impact = announcementField(replyText, '影响变量');
+  const event = announcementField(replyText, '事件');
+  const evidence = announcementField(replyText, '原文证据');
+  if (!['revenue_growth','growth','sales_growth'].includes(impact) ||
+      !/提价|涨价|价格上调|价格上涨|上调.*价格|出厂价.*上调/.test(event+' '+evidence)) return;
+
+  const run = document.createElement('div'); run.className='row ai';
+  const card = document.createElement('section'); card.className='transmission-card';
+  card.appendChild(labeledNode('span','transmission-tag','证据约束的条件推演 · 实验模块'));
+  card.appendChild(labeledNode('h3','','公告经济传导与证据缺口'));
+  card.appendChild(labeledNode('p','transmission-note','公告事实不等于公司收入增量；系统先检查必需数据，再决定能否提供条件计算。'));
+  const chain = labeledNode('div','transmission-chain','价格变动 → 受影响收入占比 × 销量变化 → 营业收入 → 现金流 → DCF');
+  card.appendChild(chain);
+  const meta = labeledNode('div','transmission-missing','正在识别已有依据及尚缺少的变量…'); card.appendChild(meta);
+  const form = document.createElement('div'); form.className='transmission-form';
+  form.innerHTML = `
+    <strong>可选：用明确的人工假设计算条件收入区间</strong>
+    <div class="transmission-fields">
+      <label>受影响产品价格变动（%）<input class="tx-price" type="number" step="0.1" min="-50" max="100" placeholder="从公告证据提取（若有）"></label>
+      <label>受影响业务原收入占比（%）<input class="tx-share" type="number" step="0.1" min="0" max="100" placeholder="如 40；无依据则留空"></label>
+      <label>销量变化下界（%）<input class="tx-low" type="number" step="0.1" min="-100" max="200" placeholder="如 -10"></label>
+      <label>销量变化上界（%）<input class="tx-high" type="number" step="0.1" min="-100" max="200" placeholder="如 0"></label>
+    </div>
+    <label class="transmission-ack"><input type="checkbox" class="tx-ack">我理解收入占比、销量范围等若无核验依据，仅是人工条件假设，不能作为正式估值输入。</label>
+    <button type="button" class="transmission-run">计算条件收入变化区间</button>
+    <div class="transmission-output" role="status" aria-live="polite" hidden></div>
+    <p class="transmission-note">暂不把条件收入变化自动代入DCF：还缺少成本、税费、资本开支、营运资本等现金流传导依据。</p>`;
+  card.appendChild(form); run.appendChild(card); messages.appendChild(run);
+  const priceEl=card.querySelector('.tx-price'), shareEl=card.querySelector('.tx-share');
+  const lowEl=card.querySelector('.tx-low'), highEl=card.querySelector('.tx-high');
+  const ack=card.querySelector('.tx-ack'), button=card.querySelector('.transmission-run');
+  const output=card.querySelector('.transmission-output');
+  const numOrNull=el=>el.value.trim()===''?null:Number(el.value);
+  const fmt=x=>Number(x).toLocaleString('zh-CN',{maximumFractionDigits:3});
+  function renderResult(data) {
+    if (!data.supported) { meta.textContent=data.explanation||'目前不支持本类事件的条件计算'; return; }
+    const price = data.event_price_change_pct;
+    const priceNote = price===null ? '原文证据无法安全提取明确的提价幅度' :
+      ('模型引用的提价幅度：'+fmt(price)+'%（'+data.event_price_source+'）');
+    meta.textContent = priceNote+'。\n仍需补充：'+data.missing_evidence.join('；')+'。';
+    meta.style.whiteSpace='pre-wrap';
+    if (price!==null) priceEl.placeholder = '自动识别 '+fmt(price)+'%，可覆盖为人工假设';
+    if (data.calculation) {
+      const c=data.calculation;
+      output.hidden=false;
+      output.textContent='条件收入变化区间：'+fmt(c.company_revenue_change_low_pct)+'% ～ '+fmt(c.company_revenue_change_high_pct)+
+        '%\n计算：受影响收入占比 × [(1+价格变化)×(1+销量变化)−1]\n'+
+        '这是在上述明确假设下的公司收入变化，不是利润、现金流或目标价预测。';
+    }
+  }
+  async function calculate(userInputs=false) {
+    const body={analysis_reply:replyText};
+    if (userInputs) {
+      const entries=[['price_change_pct',priceEl],['affected_revenue_share_pct',shareEl],['volume_low_pct',lowEl],['volume_high_pct',highEl]];
+      for (const [name,el] of entries) {
+        const v=numOrNull(el);
+        if (v!==null && !Number.isFinite(v)) {output.hidden=false;output.textContent='请检查数字格式';return;}
+        body[name]=v;
+      }
+      body.assumptions_acknowledged=ack.checked;
+    }
+    try {
+      const res=await fetch('/api/economic_transmission',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      const data=await readJsonSafely(res);
+      if (!res.ok) throw new Error(data.error||'计算服务暂时不可用');
+      renderResult(data);
+    } catch(e) {
+      if (userInputs) {output.hidden=false;output.textContent='暂时无法完成条件计算：'+e.message;}
+      else meta.textContent='经济传导模块尚未启用或连接异常：'+e.message;
+    }
+  }
+  button.addEventListener('click',async()=>{
+    if (!ack.checked) {output.hidden=false;output.textContent='请先确认这些参数只是条件假设。';return;}
+    button.disabled=true;
+    try {await calculate(true);} finally {button.disabled=false;}
+  });
+  calculate(false);
+  messages.scrollTop=messages.scrollHeight;
 }
 
 function scenarioNumeric(value) {
@@ -726,6 +827,7 @@ async function send(fullReport=false) {
     // 普通聊天/补参数：同步返回。
     addBubble(data.reply || '已完成。', 'ai', data.markdown_report || '');
     renderReviewPanel(data.reply || '');
+    renderEconomicTransmission(data.reply || '');
     showScenarioOffer(data.reply || '');
     if (data.cache_hit && data.auto_valuation) {
       addBubble('⚠ 当前年报估值直接使用预存解析缓存和演示假设，未经过新财务门禁独立核准；不能视为正式投资估值。', 'ai');

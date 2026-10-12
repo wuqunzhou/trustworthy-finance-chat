@@ -180,30 +180,30 @@
     <span class="quickbar-label">快速开始</span>
     <button class="quick-btn primary" type="button" data-template="annual">📄 年报分析</button>
     <button class="quick-btn" type="button" data-template="event">📢 公告分析</button>
-    <span class="quick-tip">粘贴完整公告即可，无需逐项填写</span>
+    <span class="quick-tip">上传公告PDF或粘贴全文，无需自行整理</span>
   </div>
   <main id="messages" aria-label="分析对话">
     <section class="welcome" aria-label="产品介绍">
       <div class="eyebrow">● FINANCIAL RESEARCH ASSISTANT</div>
       <h1>让金融分析有来源、有边界、可追溯</h1>
-      <p>上传上市公司年报，或粘贴公司公告。系统协助提取财务事实与事件信号，并对分析结果设置审核门禁；缺少关键参数时明确提示，不编造事实。</p>
+      <p>上传上市公司年报或现成公告PDF，也可粘贴公告全文。系统协助提取财务事实与事件信号，并对分析结果设置审核门禁；缺少关键参数时明确提示，不编造事实。</p>
       <div class="feature-grid">
         <div class="feature"><strong>01 / 年报事实提取</strong><span>识别财务信息与来源证据，支持估值分析及必要参数追问。</span></div>
         <div class="feature"><strong>02 / 公告事件解读</strong><span>分析事件方向和潜在财务影响，返回原文依据。</span></div>
         <div class="feature"><strong>03 / 可信审核机制</strong><span>未经审核的信息保持隔离，不直接修改正式估值参数。</span></div>
       </div>
     </section>
-    <div class="row ai"><div class="message-body"><div class="bubble">你好！你可以点击上方「年报分析」或「公告分析」，也可以直接在下方输入问题。公告只需粘贴原文，不必填写复杂表格；审核后可开启人工授权的隔离情景试算；试算不会修改正式估值。</div></div></div>
+    <div class="row ai"><div class="message-body"><div class="bubble">你好！你可以点击上方「年报分析」或「公告分析」，也可以直接在下方输入问题。公告直接上传原版PDF或粘贴原文，不必填写复杂表格；审核后可开启人工授权的隔离情景试算；试算不会修改正式估值。</div></div></div>
   </main>
   <section class="composer" aria-label="发送分析请求">
     <div id="progress" class="progress" role="status" aria-live="polite"></div>
     <div class="announce-hint" id="announceHint" role="note">
-      <strong>直接粘贴公告全文，然后点击「发送」</strong>
-      不用手动填写公司、日期、来源、链接，也不用自己总结事件。建议连同公告标题、发布日期和落款一起复制，识别更可靠。<br>
-      <small>系统仅从粘贴内容中提取信息；缺少来源会标注「待核验」。目前尚不支持只贴网址或上传公告PDF直接解析。</small>
+      <strong>直接上传现成的公告PDF，或粘贴原文后发送</strong>
+      不用手动填写公司、日期、来源或链接，也不用自己总结事件。系统自动提取文本并调用公告Agent与Reviewer。<br>
+      <small>支持可复制文字的单份公告PDF（不超过12MB、25页、15000字）；扫描图片需OCR，当前版本会明确拒绝。公告来源真实性仍需独立核验；仅贴网址尚不支持。</small>
     </div>
     <div class="attachline">
-      <span id="modeTag" class="mode-tag" aria-live="polite">公告原文模式</span>
+      <span id="modeTag" class="mode-tag" aria-live="polite">公告原文 / PDF模式</span>
       <label id="fileLabel" class="filebtn" for="file">📎 上传年报 PDF</label>
       <input id="file" type="file" accept="application/pdf,.pdf" />
       <span id="filechip" class="filechip"></span>
@@ -507,7 +507,7 @@ function setBusy(on, text='') {
   sendBtn.disabled = on;
   fullBtn.disabled = on;
   document.querySelectorAll('[data-template]').forEach(button => { button.disabled = on; });
-  fileInput.disabled = on || analysisMode === 'announcement';
+  fileInput.disabled = on;
   fileLabel.classList.toggle('disabled', on);
   statusEl.className = on ? 'status busy' : 'status';
   statusEl.textContent = text;
@@ -645,8 +645,9 @@ function prepareAnnouncement(text) {
 }
 function setAnalysisMode(mode) {
   analysisMode = mode;
-  fileLabel.style.display = mode === 'announcement' ? 'none' : '';
-  fileInput.disabled = mode === 'announcement' || busy;
+  fileLabel.style.display = '';
+  fileLabel.textContent = mode === 'announcement' ? '📎 上传公告PDF' : '📎 上传年报PDF';
+  fileInput.disabled = busy;
   announceHint.classList.toggle('active', mode === 'announcement');
   modeTag.classList.toggle('active', mode === 'announcement');
   const annualBtn = document.querySelector('[data-template="annual"]');
@@ -654,9 +655,9 @@ function setAnalysisMode(mode) {
   annualBtn.classList.toggle('selected', mode === 'annual');
   eventBtn.classList.toggle('selected', mode === 'announcement');
   if (mode === 'announcement') {
-    message.placeholder = '粘贴公告全文：标题、正文、日期、落款等原样复制即可，无需分栏…';
+    message.placeholder = '直接上传公告PDF；也可把公告全文粘贴在这里，不用自己整理…';
   } else {
-    message.placeholder = '输入分析问题，或上传一份上市公司年报PDF…';
+    message.placeholder = '输入问题，或上传一份上市公司年报PDF…';
   }
 }
 
@@ -667,12 +668,9 @@ async function send(fullReport=false) {
   const f = fileInput.files[0];
 
   if (!text && !f && !fullReport) return;
-  if (analysisMode === 'announcement' && f) {
-    addBubble('公告模式目前不支持直接上传PDF。请粘贴公告文字；上传年报请先切换到「年报分析」。', 'ai');
-    return;
-  }
+  const uploadedAnnouncement = analysisMode === 'announcement' && Boolean(f);
   let actualMessage = text;
-  if (analysisMode === 'announcement' && text && !fullReport) {
+  if (analysisMode === 'announcement' && text && !uploadedAnnouncement && !fullReport) {
     const prepared = prepareAnnouncement(text);
     if (prepared.error) {
       addBubble(prepared.error, 'ai');
@@ -685,7 +683,7 @@ async function send(fullReport=false) {
   if (text) addBubble(text, 'user');
   if (f) addBubble('已选择文件：' + f.name, 'user');
 
-  setBusy(true, f ? '正在提交年报分析任务…' : '分析中…');
+  setBusy(true, f ? (uploadedAnnouncement ? '正在提取公告PDF文字并执行事件审核…' : '正在提交年报分析任务…') : '分析中…');
 
   const fd = new FormData();
   fd.append('message', fullReport && !text ? '完整报告' : actualMessage);
@@ -694,7 +692,7 @@ async function send(fullReport=false) {
   if (f) fd.append('file', f);
 
   try {
-    const r = await fetch('/api/chat', {method:'POST', body:fd});
+    const r = await fetch(uploadedAnnouncement ? '/api/announcement_pdf' : '/api/chat', {method:'POST', body:fd});
     const data = await readJsonSafely(r);
 
     if (!r.ok) {
@@ -736,7 +734,7 @@ async function send(fullReport=false) {
     fileInput.value = '';
     filechip.style.display = 'none';
     filechip.textContent = '';
-    statusEl.textContent = data.agent1_cached ? '已复用年报缓存' : '';
+    statusEl.textContent = uploadedAnnouncement ? '公告PDF已分析 · 来源真实性待核验' : (data.agent1_cached ? '已复用年报缓存' : '');
 
   } catch (e) {
     showProgress('');

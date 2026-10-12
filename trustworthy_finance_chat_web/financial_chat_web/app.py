@@ -764,6 +764,16 @@ def too_large(_):
 from scenario_feature import register_scenario
 register_scenario(app, _load_report_cache, _auto_valuation_from_cache, _dcf_per_share)
 
+from announcement_pdf_feature import register_announcement_pdf
+
+register_announcement_pdf(
+    app,
+    coze_api_url=COZE_API_URL,
+    headers_fn=_headers,
+    unwrap_fn=_unwrap_output,
+    normalize_fn=_normalize_reply,
+)
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8000"))
     app.run(host="0.0.0.0", port=port)

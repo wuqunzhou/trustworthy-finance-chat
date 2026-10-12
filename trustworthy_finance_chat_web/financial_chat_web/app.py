@@ -774,6 +774,9 @@ register_announcement_pdf(
     normalize_fn=_normalize_reply,
 )
 
+from economic_transmission import register_economic_transmission
+register_economic_transmission(app)
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8000"))
     app.run(host="0.0.0.0", port=port)
